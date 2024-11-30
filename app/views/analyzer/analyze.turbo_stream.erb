@@ -1,0 +1,21 @@
+<%= turbo_stream.update "results" do %>
+  <% if @error %>
+    <div class="error">
+      <%= @error %>
+    </div>
+  <% else %>
+    <div class="results">
+      <h2>Analysis Results for <%= @website %></h2>
+      <ul>
+        <li>Status Code: <%= @analysis[:status] %></li>
+        <li>Page Size: <%= number_to_human_size(@analysis[:content_length]) %></li>
+        <% if @analysis[:title] %>
+          <li>Page Title: <%= @analysis[:title] %></li>
+        <% end %>
+        <% if @analysis[:description] %>
+          <li>Meta Description: <%= @analysis[:description] %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+<% end %> 
