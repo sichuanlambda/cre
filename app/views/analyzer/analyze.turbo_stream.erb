@@ -15,6 +15,14 @@
         <% if @analysis[:description] %>
           <li>Meta Description: <%= @analysis[:description] %></li>
         <% end %>
+        <li>
+          Categories:
+          <ul>
+            <% @analysis[:categories].each do |category| %>
+              <li><%= category %></li>
+            <% end %>
+          </ul>
+        </li>
       </ul>
     </div>
   <% end %>
