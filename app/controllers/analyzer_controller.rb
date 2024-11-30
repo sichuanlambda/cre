@@ -55,18 +55,19 @@ class AnalyzerController < ApplicationController
 
     prompt = <<~PROMPT
       You are a PropTech and Real Estate industry expert. Analyze this website content and categorize it into the most relevant categories from this list:
-      #{CATEGORIES.join(', ')}
+      #{CATEGORIES.join('; ')}
 
       Website content:
       #{content}
 
       Instructions:
-      1. Return between 1-5 most relevant categories as a comma-separated list
+      1. Return between 1-5 most relevant categories as a semicolon-separated list
       2. Only use categories from the provided list
       3. Focus on the main purpose/offering of the website
       4. If the content is unclear, prioritize categories that best match any real estate or property technology elements present
+      5. Format your response exactly like this example: "Category 1; Category 2; Category 3"
 
-      Return only the matching categories as a comma-separated list, nothing else.
+      Return only the matching categories as a semicolon-separated list, nothing else.
     PROMPT
 
     response = client.chat(
@@ -78,7 +79,8 @@ class AnalyzerController < ApplicationController
       }
     )
 
-    response.dig("choices", 0, "message", "content").split(',').map(&:strip)
+    # Split by semicolon and clean up any whitespace
+    response.dig("choices", 0, "message", "content").split(';').map(&:strip)
   rescue => e
     ["Error categorizing: #{e.message}"]
   end

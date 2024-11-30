@@ -16,12 +16,7 @@
           <li>Meta Description: <%= @analysis[:description] %></li>
         <% end %>
         <li>
-          Categories:
-          <ul>
-            <% @analysis[:categories].each do |category| %>
-              <li><%= category %></li>
-            <% end %>
-          </ul>
+          Categories: <%= @analysis[:categories].join('; ') %>
         </li>
       </ul>
     </div>
