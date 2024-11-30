@@ -103,8 +103,21 @@ GEM
     debug (1.9.2)
       irb (~> 1.10)
       reline (>= 0.3.8)
+    dotenv (3.1.4)
+    dotenv-rails (3.1.4)
+      dotenv (= 3.1.4)
+      railties (>= 6.1)
     drb (2.2.1)
     erubi (1.13.0)
+    event_stream_parser (1.0.0)
+    faraday (2.12.1)
+      faraday-net_http (>= 2.0, < 3.5)
+      json
+      logger
+    faraday-multipart (1.0.4)
+      multipart-post (~> 2)
+    faraday-net_http (3.4.0)
+      net-http (>= 0.5.0)
     globalid (1.2.1)
       activesupport (>= 6.1)
     i18n (1.14.6)
@@ -120,6 +133,7 @@ GEM
     jbuilder (2.13.0)
       actionview (>= 5.0.0)
       activesupport (>= 5.0.0)
+    json (2.8.2)
     logger (1.6.1)
     loofah (2.23.1)
       crass (~> 1.0.2)
@@ -135,7 +149,10 @@ GEM
     mini_portile2 (2.8.8)
     minitest (5.25.2)
     msgpack (1.7.5)
+    multipart-post (2.4.1)
     mutex_m (0.3.0)
+    net-http (0.5.0)
+      uri
     net-imap (0.4.18)
       date
       net-protocol
@@ -201,6 +218,10 @@ GEM
     reline (0.5.12)
       io-console (~> 0.5)
     rexml (3.3.9)
+    ruby-openai (7.3.1)
+      event_stream_parser (>= 0.3.0, < 2.0.0)
+      faraday (>= 1)
+      faraday-multipart (>= 1)
     rubyzip (2.3.2)
     securerandom (0.3.2)
     selenium-webdriver (4.26.0)
@@ -228,6 +249,7 @@ GEM
       railties (>= 6.0.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
+    uri (1.0.2)
     web-console (4.2.1)
       actionview (>= 6.0.0)
       activemodel (>= 6.0.0)
@@ -250,10 +272,12 @@ DEPENDENCIES
   bootsnap
   capybara
   debug
+  dotenv-rails
   importmap-rails
   jbuilder
   puma (>= 5.0)
   rails (~> 7.1.5)
+  ruby-openai
   selenium-webdriver
   sprockets-rails
   sqlite3 (>= 1.4)
