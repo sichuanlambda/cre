@@ -1,0 +1,32 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold mb-4">CRE Website Analyzer</h1>
+
+  <%= form_with(url: analyze_path, method: :post, local: true, class: "space-y-4") do |f| %>
+    <div>
+      <%= f.label :website, "Website URL", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :website, value: @website, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <%= f.submit "Analyze", class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
+  <% end %>
+
+  <% if @result %>
+    <div class="mt-8 p-4 bg-gray-100 rounded">
+      <h2 class="text-xl font-bold mb-2">Analysis Results</h2>
+      
+      <div class="mb-4">
+        <h3 class="font-bold">Description:</h3>
+        <div class="whitespace-pre-wrap"><%= @result[:description] %></div>
+      </div>
+
+      <div>
+        <h3 class="font-bold">Tags:</h3>
+        <div class="flex flex-wrap gap-2">
+          <% @result[:tags].each do |tag| %>
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded"><%= tag %></span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div> 
