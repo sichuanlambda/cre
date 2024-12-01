@@ -21,3 +21,26 @@ municipalities.each do |muni_data|
     muni.country = muni_data[:country]
   end
 end
+
+Municipality.find_each do |municipality|
+  data = MunicipalityDataService.generate_data_for_municipality(municipality)
+
+  # Create council members
+  data["council_members"].each do |member_data|
+    municipality.council_members.find_or_create_by!(name: member_data["name"]) do |member|
+      member.position = member_data["position"]
+      member.social_links = member_data["social_links"]
+    end
+  end
+
+  # Create or update election cycle
+  municipality.create_election_cycle!(
+    next_election_date: data["election_cycle"]["next_election_date"],
+    cycle_years: data["election_cycle"]["cycle_years"]
+  )
+
+  # Create or update development score
+  municipality.create_development_score!(
+    current_score: data["development_score"]["current_score"]
+  )
+end

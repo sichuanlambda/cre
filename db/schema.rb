@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_12_01_202542) do
+ActiveRecord::Schema[7.1].define(version: 2024_12_01_205000) do
   create_table "council_members", force: :cascade do |t|
     t.string "name"
     t.string "position"
@@ -18,6 +18,10 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_01_202542) do
     t.integer "municipality_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "election_cycle_id"
+    t.integer "first_term_start_year"
+    t.integer "terms_served", default: 1
+    t.index ["election_cycle_id"], name: "index_council_members_on_election_cycle_id"
     t.index ["municipality_id"], name: "index_council_members_on_municipality_id"
   end
 
@@ -34,6 +38,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_01_202542) do
     t.integer "municipality_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "cycle_years"
+    t.string "name"
     t.index ["municipality_id"], name: "index_election_cycles_on_municipality_id"
   end
 
@@ -46,6 +52,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_01_202542) do
     t.index ["name"], name: "index_municipalities_on_name"
   end
 
+  add_foreign_key "council_members", "election_cycles"
   add_foreign_key "council_members", "municipalities"
   add_foreign_key "development_scores", "municipalities"
   add_foreign_key "election_cycles", "municipalities"
