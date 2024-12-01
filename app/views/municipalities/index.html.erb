@@ -69,6 +69,23 @@
               </div>
             </div>
           </div>
+
+          <div class="news-articles">
+            <h3>Recent News</h3>
+            <% if municipality.news_articles.any? %>
+              <div class="news-articles-list">
+                <% municipality.news_articles.limit(3).each do |article| %>
+                  <div class="news-article">
+                    <h4><%= link_to article.title, article.url, target: "_blank" %></h4>
+                    <p class="date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
+                    <p class="description"><%= truncate(article.description, length: 150) %></p>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <p class="no-news">No recent news available</p>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>
@@ -116,5 +133,51 @@
   .election-info h3 {
     margin-bottom: 10px;
     color: #2c3e50;
+  }
+
+  .news-articles {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+
+  .news-articles h3 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+  }
+
+  .news-article {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .news-article:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .news-article h4 {
+    margin: 0;
+    font-size: 1.1em;
+  }
+
+  .news-article .date {
+    color: #6c757d;
+    font-size: 0.9em;
+    margin: 5px 0;
+  }
+
+  .news-article .description {
+    color: #495057;
+    font-size: 0.95em;
+    line-height: 1.4;
+  }
+
+  .no-news {
+    color: #6c757d;
+    font-style: italic;
   }
 </style> 

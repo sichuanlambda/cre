@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_12_01_205000) do
+ActiveRecord::Schema[7.1].define(version: 2024_12_01_210000) do
   create_table "council_members", force: :cascade do |t|
     t.string "name"
     t.string "position"
@@ -52,8 +52,20 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_01_205000) do
     t.index ["name"], name: "index_municipalities_on_name"
   end
 
+  create_table "news_articles", force: :cascade do |t|
+    t.string "title"
+    t.text "description"
+    t.string "url"
+    t.datetime "published_at"
+    t.integer "municipality_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["municipality_id"], name: "index_news_articles_on_municipality_id"
+  end
+
   add_foreign_key "council_members", "election_cycles"
   add_foreign_key "council_members", "municipalities"
   add_foreign_key "development_scores", "municipalities"
   add_foreign_key "election_cycles", "municipalities"
+  add_foreign_key "news_articles", "municipalities"
 end

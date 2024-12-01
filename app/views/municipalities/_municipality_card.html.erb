@@ -8,13 +8,23 @@
 
   <div class="election-info">
     <h3>Election Information</h3>
-    <p>Next Election: <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
-    <p>Election Cycle: Every <%= municipality.election_cycle.cycle_years %> years</p>
+    <p>Next Election: <%= municipality.next_election_date&.strftime("%B %d, %Y") %></p>
+    <p>Election Cycle: Every <%= municipality.election_cycle&.cycle_years %> years</p>
   </div>
 
   <div class="development-score">
     <h3>Development Friendliness</h3>
-    <%= render partial: "development_score", 
-               locals: { score: municipality.development_score } %>
+    <%= render partial: "development_score", locals: { score: municipality.development_score } %>
+  </div>
+
+  <div class="news-articles">
+    <h3>Recent News</h3>
+    <% municipality.news_articles.limit(5).each do |article| %>
+      <div class="news-article">
+        <h4><%= link_to article.title, article.url, target: "_blank" %></h4>
+        <p class="date"><%= article.published_at.strftime("%B %d, %Y") %></p>
+        <p class="description"><%= truncate(article.description, length: 150) %></p>
+      </div>
+    <% end %>
   </div>
 </div> 

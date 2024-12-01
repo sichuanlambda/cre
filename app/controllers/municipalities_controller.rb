@@ -1,11 +1,11 @@
 class MunicipalitiesController < ApplicationController
   def index
-    @municipalities = Municipality.includes(:council_members, :election_cycle, :development_score)
+    @municipalities = Municipality.includes(:council_members, :election_cycle, :development_score, :news_articles)
                                 .search(params[:query])
   end
 
   def show
-    @municipality = Municipality.includes(:council_members, :election_cycle, :development_score)
+    @municipality = Municipality.includes(:council_members, :election_cycle, :development_score, :news_articles)
                               .find(params[:id])
   end
 

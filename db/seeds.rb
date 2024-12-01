@@ -35,8 +35,10 @@ Municipality.find_each do |municipality|
 
   # Create or update election cycle
   municipality.create_election_cycle!(
+    name: "#{municipality.name} Election Cycle",
+    last_election_date: data["election_cycle"]["next_election_date"] - 4.years,
     next_election_date: data["election_cycle"]["next_election_date"],
-    cycle_years: data["election_cycle"]["cycle_years"]
+    cycle_years: data["election_cycle"]["cycle_years"] || 4
   )
 
   # Create or update development score

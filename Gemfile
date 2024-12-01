@@ -71,3 +71,9 @@ gem 'ruby-openai'
 gem 'dotenv-rails'
 
 gem 'nokogiri'
+
+gem 'httparty'
+
+gem 'news-api'
+
+gem 'geocoder'
