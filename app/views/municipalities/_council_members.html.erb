@@ -1,0 +1,10 @@
+<div class="council-members-list">
+  <% members.each do |member| %>
+    <div class="member-card">
+      <h4><%= member.name %></h4>
+      <p class="position"><%= member.position %></p>
+      <%= render partial: "social_links", locals: { links: member.social_links } %>
+      <p class="term-status"><%= member.term_status %></p>
+    </div>
+  <% end %>
+</div> 

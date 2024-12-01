@@ -1,0 +1,20 @@
+<div class="municipality-card">
+  <h2><%= municipality.name %></h2>
+  
+  <div class="council-members">
+    <h3>Current Council Members</h3>
+    <%= render partial: "council_members", locals: { members: municipality.council_members } %>
+  </div>
+
+  <div class="election-info">
+    <h3>Election Information</h3>
+    <p>Next Election: <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
+    <p>Election Cycle: Every <%= municipality.election_cycle.cycle_years %> years</p>
+  </div>
+
+  <div class="development-score">
+    <h3>Development Friendliness</h3>
+    <%= render partial: "development_score", 
+               locals: { score: municipality.development_score } %>
+  </div>
+</div> 

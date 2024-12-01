@@ -1,0 +1,120 @@
+<div class="municipalities-container">
+  <h1>Municipality Council Tracker</h1>
+
+  <%= form_with url: search_municipalities_path, method: :get, data: { turbo_frame: "results" } do |f| %>
+    <div class="search-container">
+      <%= f.text_field :query, placeholder: "Search municipalities...", 
+                              class: "search-input" %>
+      <%= f.submit "Search", class: "search-button" %>
+    </div>
+  <% end %>
+
+  <%= turbo_frame_tag "results" do %>
+    <div class="municipality-list">
+      <% @municipalities.each do |municipality| %>
+        <div class="municipality-card">
+          <h2><%= municipality.name %></h2>
+          
+          <div class="council-members">
+            <h3>Current Council Members</h3>
+            <div class="council-members-list">
+              <% municipality.council_members.each do |member| %>
+                <div class="member-card">
+                  <h4><%= member.name %></h4>
+                  <p class="position"><%= member.position %></p>
+                  
+                  <% if member.social_links.present? %>
+                    <div class="social-links">
+                      <% member.social_links.each do |platform, url| %>
+                        <%= link_to platform.to_s.titleize, url, 
+                                    class: "social-link #{platform}",
+                                    target: "_blank" %>
+                      <% end %>
+                    </div>
+                  <% end %>
+                  
+                  <p class="term-status"><%= member.term_status %></p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="election-info">
+            <h3>Election Information</h3>
+            <% if municipality.next_election_date %>
+              <p>Next Election: <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
+            <% else %>
+              <p>Next Election: Not scheduled</p>
+            <% end %>
+            
+            <% if municipality.election_cycle&.cycle_years %>
+              <p>Election Cycle: Every <%= municipality.election_cycle.cycle_years %> years</p>
+            <% else %>
+              <p>Election Cycle: Not set</p>
+            <% end %>
+          </div>
+
+          <div class="development-score">
+            <h3>Development Friendliness</h3>
+            <div class="development-score-display">
+              <div class="score-number">
+                <% if municipality.development_score&.current_score %>
+                  <%= municipality.development_score.current_score %>/100
+                <% else %>
+                  N/A
+                <% end %>
+              </div>
+              <div class="score-description">
+                <%= municipality.development_score&.rating_description || "No rating available" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .municipality-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .municipality-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .development-score-display {
+    text-align: center;
+    margin: 15px 0;
+  }
+
+  .score-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  .score-description {
+    color: #7f8c8d;
+    margin-top: 5px;
+  }
+
+  .election-info {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+
+  .election-info h3 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+  }
+</style> 

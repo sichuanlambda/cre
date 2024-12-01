@@ -1,0 +1,5 @@
+<div class="municipality-list">
+  <% municipalities.each do |municipality| %>
+    <%= render partial: "municipality_card", locals: { municipality: municipality } %>
+  <% end %>
+</div> 
