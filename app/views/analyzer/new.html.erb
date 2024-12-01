@@ -1,11 +1,22 @@
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-2xl font-bold mb-4">CRE Website Analyzer</h1>
 
-  <%= form_with url: analyze_path, data: { turbo_stream: true } do |f| %>
-    <%= f.label :website, "Website URL" %>
-    <%= f.text_field :website %>
-    <%= f.submit "Analyze" %>
-  <% end %>
+  <div class="analysis-options">
+    <h3>Single URL Analysis</h3>
+    <%= form_with url: analyze_path, data: { turbo_stream: true } do |f| %>
+      <%= f.label :website, "Website URL" %>
+      <%= f.text_field :website %>
+      <%= f.submit "Analyze" %>
+    <% end %>
+
+    <h3>Batch Analysis</h3>
+    <%= form_with url: batch_analyze_path, data: { turbo_stream: true } do |f| %>
+      <%= f.label :websites, "Enter URLs (one per line)" %>
+      <%= f.text_area :websites, rows: 10, placeholder: "example1.com\nexample2.com\nexample3.com" %>
+      <%= f.submit "Analyze All" %>
+      <%= button_to "Download CSV", batch_analyze_path(format: :csv), method: :post, form: { target: '_blank' }, class: "button" %>
+    <% end %>
+  </div>
 
   <div id="results">
     <!-- Results will be updated here -->

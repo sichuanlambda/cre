@@ -1,6 +1,7 @@
 require 'net/http'
 require 'uri'
 require 'nokogiri'
+require 'csv'
 
 class AnalyzerController < ApplicationController
   CATEGORIES = [
@@ -45,6 +46,56 @@ class AnalyzerController < ApplicationController
 
     respond_to do |format|
       format.turbo_stream
+    end
+  end
+
+  def batch_analyze
+    @websites = params[:websites].to_s.split(/[\n,]/).map(&:strip).reject(&:empty?)
+
+    @results = []
+    @websites.each do |website|
+      website = "https://#{website}" unless website.start_with?('http://', 'https://')
+
+      begin
+        uri = URI.parse(website)
+        response = Net::HTTP.get_response(uri)
+        doc = Nokogiri::HTML(response.body)
+        doc.css('script, style').remove
+        text_content = doc.text.strip.gsub(/\s+/, ' ')[0...1000]
+
+        categories = analyze_with_llm(text_content)
+        @results << {
+          website: website,
+          categories: categories,
+          status: response.code
+        }
+
+        sleep 1 # Rate limiting
+      rescue => e
+        @results << {
+          website: website,
+          categories: [],
+          error: "Error: #{e.message}",
+          status: nil
+        }
+      end
+    end
+
+    respond_to do |format|
+      format.turbo_stream
+      format.csv do
+        csv_data = CSV.generate(headers: true) do |csv|
+          csv << ['Website', 'Categories', 'Status']
+          @results.each do |result|
+            csv << [
+              result[:website],
+              result[:error] || result[:categories].join('; '),
+              result[:status]
+            ]
+          end
+        end
+        send_data csv_data, filename: "website_analysis_#{Time.current.to_i}.csv"
+      end
     end
   end
 

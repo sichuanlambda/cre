@@ -1,0 +1,12 @@
+<%= turbo_stream.update "results" do %>
+  <div class="batch-results">
+    <h2>Category Results</h2>
+    <div class="categories-column" style="margin: 20px 0;">
+      <% @results.each do |result| %>
+        <div class="category-row" style="margin: 8px 0;">
+          <%= result[:error] ? "N/A" : result[:categories].join('; ') %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %> 
