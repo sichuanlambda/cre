@@ -194,7 +194,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
   }
 
   .election-info {
@@ -231,7 +231,6 @@
     margin-bottom: 15px;
     color: #333;
   }
-
   .form-section p {
     font-size: 0.9em;
     color: #666;
@@ -588,6 +587,191 @@
     align-self: center;      /* Center the button vertically */
     margin-left: 20px;              /* Remove any margins */
   }
+
+  .municipal-resources {
+    flex: 1;
+    margin: 0 20px;
+  }
+
+  .municipal-resources h4 {
+    color: #333;
+    font-size: 1.1em;
+    margin: 15px 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .municipal-resources ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .municipal-resources li {
+    margin-bottom: 10px;
+  }
+
+  .municipal-resources a {
+    color: #2c5282;
+    text-decoration: none;
+    font-size: 0.95em;
+  }
+
+  .municipal-resources a:hover {
+    text-decoration: underline;
+  }
+
+  .resource-date {
+    display: block;
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  .resource-category {
+    margin-bottom: 20px;
+  }
+
+  .search-container {
+    margin: 20px auto 40px;
+    max-width: 600px;
+    padding: 0 20px;
+  }
+
+  .search-form {
+    display: flex;
+    gap: 10px;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1em;
+  }
+
+  .search-button {
+    padding: 12px 24px;
+    background: #2c5282;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .search-button:hover {
+    background: #1a365d;
+  }
+
+  .development-score {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+
+  .development-score .score {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2c5282;
+  }
+
+  .development-score .rating-description {
+    font-size: 0.9em;
+    color: #4a5568;
+  }
+
+  .election-info {
+    text-align: right;
+    color: #4a5568;
+    font-size: 0.9em;
+  }
+
+  .election-info strong {
+    color: #2d3748;
+  }
+
+  .municipal-resources-section {
+    margin-top: 5px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+  }
+
+  .municipal-resources-section .section-header {
+    margin-bottom: 5px;
+  }
+
+  .municipal-resources-section h3 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  .resources-columns {
+    display: flex;
+    gap: 30px;
+    margin-top: 5px;
+  }
+
+  .resources-column {
+    flex: 1;
+    min-width: 0; /* Prevents flex items from overflowing */
+  }
+
+  .resource-group {
+    margin-bottom: 15px;
+  }
+
+  .resource-category-title {
+    font-size: 1.05em;
+    color: #2d3748;
+    margin: 12px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .resources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .resources-list li {
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 20px;
+    font-size: 0.95em;
+  }
+
+  .resources-list a {
+    color: #2c5282;
+    text-decoration: none;
+    flex: 1;
+    min-width: 0; /* Prevents text from overflowing */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .resources-list a:hover {
+    text-decoration: underline;
+  }
+
+  .resource-date {
+    color: #718096;
+    font-size: 0.9em;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    .resources-columns {
+      flex-direction: column;
+      gap: 15px;
+    }
+  }
 </style>
 
 <header class="site-header">
@@ -670,14 +854,15 @@
         <h2><%= municipality.name %></h2>
         
         <div class="development-score">
-          <div class="score"><%= municipality.development_score&.current_score || "N/A" %></div>
+          <div class="score"><%= municipality.development_friendliness_rating %></div>
           <h3>Development Score</h3>
           <p class="rating-description"><%= 
-            case municipality.development_score&.rating_description
-            when /very development friendly/i then "Very Friendly"
-            when /development friendly/i then "Friendly"
-            when /somewhat development friendly/i then "Somewhat Friendly"
-            else "No rating"
+            case municipality.development_friendliness_rating
+            when 80..100 then "Very Friendly"
+            when 60..79 then "Friendly"
+            when 40..59 then "Somewhat Friendly"
+            when 20..39 then "Less Friendly"
+            else "Needs Improvement"
             end
           %></p>
         </div>
@@ -706,7 +891,11 @@
             <div class="section-header">
               <h3>Council Members</h3>
               <div class="election-info">
-                <p><strong>Next Election:</strong> <%= municipality.next_election_date ? municipality.next_election_date.strftime("%B %d, %Y") : "Not scheduled" %></p>
+                <% if municipality.next_election_date %>
+                  <p><strong>Next Election:</strong> <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
+                <% else %>
+                  <p><strong>Next Election:</strong> Not scheduled</p>
+                <% end %>
               </div>
             </div>
             <ul>
@@ -726,6 +915,37 @@
               <% end %>
             </ul>
           </div>
+        </div>
+
+        <div class="municipal-resources-section">
+          <div class="section-header">
+            <h3>Municipal Resources</h3>
+          </div>
+          <% if municipality.municipal_resources.any? %>
+            <div class="resources-columns">
+              <% municipality.municipal_resources.group_by(&:category).each_slice(2) do |category_pair| %>
+                <div class="resources-column">
+                  <% category_pair.each do |category, resources| %>
+                    <div class="resource-group">
+                      <h4 class="resource-category-title"><%= category.titleize %></h4>
+                      <ul class="resources-list">
+                        <% resources.take(3).each do |resource| %>
+                          <li>
+                            <%= link_to resource.title, resource.url, target: "_blank" %>
+                            <% if resource.last_updated %>
+                              <span class="resource-date">Updated: <%= resource.last_updated.strftime("%B %d, %Y") %></span>
+                            <% end %>
+                          </li>
+                        <% end %>
+                      </ul>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p>No resources available</p>
+          <% end %>
         </div>
       </div>
     <% end %>

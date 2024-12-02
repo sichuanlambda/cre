@@ -8,12 +8,10 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-# Clear existing data
-puts "Clearing existing data..."
-CouncilMember.destroy_all
-NewsArticle.destroy_all
-DevelopmentScore.destroy_all
-Municipality.destroy_all
+puts "Starting seed process..."
+
+# Don't clear existing data
+# Remove the destroy_all commands
 
 # Create municipalities
 municipalities = [
@@ -68,62 +66,89 @@ municipalities.each do |muni_data|
     puts "Created new municipality: #{muni.name}, #{muni.state}"
   end
 
-  # Skip only if municipality has all required data
-  if municipality.council_members.exists? &&
-     municipality.development_score.present? &&
-     municipality.news_articles.exists?
-    puts "Skipping #{municipality.name} - data is complete"
-    next
-  end
-
-  puts "Fetching data for #{municipality.name}..."
+  # Add retry logic for rate limits
+  retries = 0
   begin
-    data = MunicipalityDataService.generate_data_for_municipality(municipality)
+    # Only fetch data if something is missing
+    if !municipality.council_members.exists? ||
+       !municipality.development_score.present? ||
+       !municipality.news_articles.exists? ||
+       !municipality.municipal_resources.exists?
 
-    # Add new council members without removing existing ones
-    if data["council_members"].present?
-      puts "Adding new council members..."
-      data["council_members"].each do |member_data|
-        reelection_info = data["reelection_dates"]&.find { |rd| rd && rd["council_member_name"] == member_data["name"] }
+      puts "Fetching missing data for #{municipality.name}..."
+      data = MunicipalityDataService.generate_data_for_municipality(municipality)
 
-        municipality.council_members.find_or_create_by!(
-          name: member_data["name"],
-          position: member_data["position"].presence || "Council Member",
-          social_links: member_data["social_links"] || {},
-          next_election_date: reelection_info&.dig("next_election_date")
-        )
-      end
-    end
+      # Add council members if none exist
+      if !municipality.council_members.exists? && data["council_members"].present?
+        puts "Adding council members..."
+        data["council_members"].each do |member_data|
+          reelection_info = data["reelection_dates"]&.find { |rd| rd && rd["council_member_name"] == member_data["name"] }
 
-    # Create development score if it doesn't exist
-    if municipality.development_score.nil?
-      puts "Creating development score..."
-      municipality.create_development_score!(
-        current_score: data["development_score"]["current_score"]
-      )
-    end
-
-    # Create news articles if none exist
-    if municipality.news_articles.empty?
-      puts "Saving news articles..."
-      data["news_articles"].each do |article_data|
-        begin
-          municipality.news_articles.create!(
-            title: article_data[:title],
-            description: article_data[:description],
-            url: article_data[:url],
-            published_at: article_data[:published_at] || Time.current
-          )
-        rescue ActiveRecord::RecordInvalid => e
-          if e.message.include?('Url has already been taken')
-            puts "Skipping duplicate article: #{article_data[:title]}"
-            next
+          municipality.council_members.find_or_create_by!(
+            name: member_data["name"]
+          ) do |member|
+            member.position = member_data["position"].presence || "Council Member"
+            member.social_links = member_data["social_links"] || {}
+            member.next_election_date = reelection_info&.dig("next_election_date")
           end
         end
       end
+
+      # Create development score if missing
+      if !municipality.development_score && data["development_score"]
+        puts "Creating development score..."
+        municipality.create_development_score!(
+          current_score: data["development_score"]["current_score"]
+        )
+      end
+
+      # Add news articles if none exist
+      if !municipality.news_articles.exists? && data["news_articles"].present?
+        puts "Saving news articles..."
+        data["news_articles"].each do |article_data|
+          begin
+            municipality.news_articles.find_or_create_by!(url: article_data[:url]) do |article|
+              article.title = article_data[:title]
+              article.description = article_data[:description]
+              article.published_at = article_data[:published_at] || Time.current
+            end
+          rescue ActiveRecord::RecordInvalid => e
+            puts "Skipping invalid article for #{municipality.name}: #{e.message}"
+          end
+        end
+      end
+
+      # Add municipal resources if none exist
+      if !municipality.municipal_resources.exists? && data["municipal_resources"].present?
+        puts "Saving municipal resources..."
+        data["municipal_resources"].each do |category, resources|
+          resources.each do |resource|
+            begin
+              municipality.municipal_resources.find_or_create_by!(url: resource["url"]) do |r|
+                r.title = resource["title"]
+                r.description = resource["description"]
+                r.category = category
+                r.last_updated = resource["last_updated"]
+              end
+            rescue ActiveRecord::RecordInvalid => e
+              puts "Skipping invalid resource for #{municipality.name}: #{e.message}"
+            end
+          end
+        end
+      end
+    else
+      puts "Skipping #{municipality.name} - data is complete"
     end
+
   rescue StandardError => e
-    puts "Error fetching data for #{municipality.name}: #{e.message}"
+    retries += 1
+    if retries <= 3 && e.message.include?('status 429')
+      puts "Rate limited, waiting 60 seconds before retry #{retries}/3..."
+      sleep 60
+      retry
+    else
+      puts "Error fetching data for #{municipality.name}: #{e.message}"
+    end
   end
 end
 
