@@ -1,13 +1,12 @@
 class Municipality < ApplicationRecord
-  has_many :council_members
-  has_one :election_cycle
-  has_one :development_score
+  has_many :council_members, dependent: :destroy
   has_many :news_articles, dependent: :destroy
+  has_one :development_score, dependent: :destroy
 
   validates :name, presence: true, uniqueness: true
 
   def next_election_date
-    election_cycle&.next_election_date
+    council_members.maximum(:next_election_date)
   end
 
   def development_friendliness_rating

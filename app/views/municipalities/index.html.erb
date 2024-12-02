@@ -47,11 +47,6 @@
               <p>Next Election: Not scheduled</p>
             <% end %>
             
-            <% if municipality.election_cycle&.cycle_years %>
-              <p>Election Cycle: Every <%= municipality.election_cycle.cycle_years %> years</p>
-            <% else %>
-              <p>Election Cycle: Not set</p>
-            <% end %>
           </div>
 
           <div class="development-score">

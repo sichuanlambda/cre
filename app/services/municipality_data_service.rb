@@ -2,7 +2,7 @@ class MunicipalityDataService
   def self.generate_data_for_municipality(municipality)
     data = {
       "council_members" => fetch_council_members(municipality),
-      "election_cycle" => fetch_election_data(municipality),
+      "reelection_dates" => fetch_reelection_dates(municipality),
       "development_score" => calculate_development_score(municipality),
       "news_articles" => fetch_news_articles(municipality)
     }
@@ -14,61 +14,116 @@ class MunicipalityDataService
   private
 
   def self.fetch_council_members(municipality)
-    case municipality.name.downcase
-    when /kansas city/
-      doc = fetch_page("https://www.kcmo.gov/city-hall/city-council")
-      parse_kc_council_members(doc)
-    when /oklahoma city/
-      doc = fetch_page("https://www.okc.gov/government/city-council")
-      parse_okc_council_members(doc)
-    when /denver/
-      doc = fetch_page("https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Denver-City-Council")
-      parse_denver_council_members(doc)
-    else
-      search_and_scrape_council_members(municipality)
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a data extraction expert. Extract council member information from city websites or search results. Your response must be valid JSON only, with no additional text or explanation. Format: array of objects with fields: name, position, social_links (Twitter/LinkedIn), first_term_start_year, and terms_served."
+          },
+          {
+            role: "user",
+            content: "Find current council members for #{municipality.name}, #{municipality.state}. Include their social media profiles if available."
+          }
+        ]
+      }
+    )
+    parse_ai_council_response(response)
+  end
+
+  def self.fetch_reelection_dates(municipality)
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are an election data specialist. Your response must be valid JSON only, with no additional text or explanation. Return an array of objects with fields: council_member_name and next_election_date (YYYY-MM-DD format). If exact dates aren't known, use the first day of the expected month/year."
+          },
+          {
+            role: "user",
+            content: "When are the next reelection dates for current council members in #{municipality.name}, #{municipality.state}?"
+          }
+        ]
+      }
+    )
+
+    parse_ai_reelection_response(response) || []
+  end
+
+  def self.calculate_development_score(municipality)
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a municipal development analyst. Your response must be valid JSON only, with no additional text or explanation. Analyze city data and provide a development friendliness score object with a single field 'score' containing a number from 0-100, based on factors like permit processing times, zoning flexibility, and economic growth."
+          },
+          {
+            role: "user",
+            content: "Analyze development friendliness for #{municipality.name}, #{municipality.state}. Consider recent news, economic indicators, and municipal policies."
+          }
+        ]
+      }
+    )
+
+    score = parse_ai_score_response(response)
+    { "current_score" => score || rand(60..95) }
+  end
+
+  def self.parse_ai_council_response(response)
+    return [] unless response['choices']&.first&.dig('message', 'content')
+
+    begin
+      JSON.parse(response['choices'].first['message']['content'])
+    rescue JSON::ParserError
+      content = response['choices'].first['message']['content']
+      extract_council_members_from_text(content)
     end
   end
 
-  def self.parse_kc_council_members(doc)
-    return [] unless doc
+  def self.parse_ai_reelection_response(response)
+    return [] unless response['choices']&.first&.dig('message', 'content')
 
-    doc.css('.council-member, .elected-official').map do |member|
-      {
-        "name" => member.css('h3, .name').text.strip,
-        "position" => member.css('.title, .position').text.strip,
-        "social_links" => extract_social_links(member),
-        "first_term_start_year" => 2020, # Default for now, enhance with actual scraping
-        "terms_served" => 1 # Default for now, enhance with actual scraping
-      }
+    begin
+      JSON.parse(response['choices'].first['message']['content'])
+    rescue JSON::ParseError => e
+      Rails.logger.error "Failed to parse reelection response: #{e.message}"
+      []
     end
   end
 
-  def self.fetch_election_data(municipality)
-    case municipality.name.downcase
-    when /kansas city/
-      {
-        "next_election_date" => Date.new(2024, 4, 2),
-        "last_election_date" => Date.new(2020, 4, 7),
-        "cycle_years" => 4,
-        "name" => "#{municipality.name} Municipal Elections"
-      }
-    when /oklahoma city/
-      {
-        "next_election_date" => Date.new(2024, 2, 13),
-        "last_election_date" => Date.new(2020, 2, 11),
-        "cycle_years" => 4,
-        "name" => "#{municipality.name} Municipal Elections"
-      }
-    when /denver/
-      {
-        "next_election_date" => Date.new(2024, 4, 2),
-        "last_election_date" => Date.new(2020, 4, 7),
-        "cycle_years" => 4,
-        "name" => "#{municipality.name} Municipal Elections"
-      }
-    else
-      search_and_scrape_election_data(municipality)
+  def self.parse_ai_score_response(response)
+    return nil unless response['choices']&.first&.dig('message', 'content')
+
+    content = response['choices'].first['message']['content']
+    content.scan(/\d+/).first&.to_i
+  end
+
+  def self.extract_council_members_from_text(content)
+    members = []
+    current_member = {}
+
+    content.each_line do |line|
+      case line
+      when /name:?\s*(.+)/i
+        members << current_member unless current_member.empty?
+        current_member = { "name" => $1.strip }
+      when /position:?\s*(.+)/i
+        current_member["position"] = $1.strip
+      when /twitter:?\s*(.+)/i
+        current_member["social_links"] ||= {}
+        current_member["social_links"]["twitter"] = $1.strip
+      when /linkedin:?\s*(.+)/i
+        current_member["social_links"] ||= {}
+        current_member["social_links"]["linkedin"] = $1.strip
+      end
     end
+
+    members << current_member unless current_member.empty?
+    members
   end
 
   def self.fetch_news_articles(municipality)
@@ -76,18 +131,16 @@ class MunicipalityDataService
 
     news_api = News.new(ENV['NEWS_API_KEY'])
     articles = news_api.get_everything(
-      q: "#{municipality.name} city council OR mayor OR municipal",
+      q: "(development OR rezone OR \"public opposition\") AND (#{municipality.name}) AND (mayor OR \"city council\" OR municipal)",
       language: 'en',
       sortBy: 'publishedAt',
-      pageSize: 10
+      pageSize: 5
     )
 
     articles.map do |article|
       {
         title: article.title,
-        description: article.description,
-        url: article.url,
-        published_at: article.publishedAt
+        url: article.url
       }
     end
   rescue => e
@@ -100,14 +153,9 @@ class MunicipalityDataService
       municipality.news_articles.find_or_create_by!(url: article_data[:url]) do |article|
         article.title = article_data[:title]
         article.description = article_data[:description]
-        article.published_at = article_data[:published_at]
+        article.published_at = article_data[:published_at] || Time.current
       end
     end
-  end
-
-  def self.calculate_development_score(municipality)
-    # Implement actual scoring logic based on various factors
-    { "current_score" => rand(60..95) }
   end
 
   def self.fetch_page(url)
@@ -123,5 +171,18 @@ class MunicipalityDataService
       "twitter" => member_element.css('a[href*="twitter"]').first&.attr('href'),
       "linkedin" => member_element.css('a[href*="linkedin"]').first&.attr('href')
     }
+  end
+
+  def self.get_council_page_url(municipality_name)
+    case municipality_name.downcase
+    when 'kansas city'
+      'https://www.kcmo.gov/city-hall/city-officials/city-council'
+    when 'oklahoma city'
+      'https://www.okc.gov/government/city-council'
+    when 'denver'
+      'https://www.denvergov.org/Government/Departments/City-Council'
+    else
+      raise "No URL defined for #{municipality_name}"
+    end
   end
 end

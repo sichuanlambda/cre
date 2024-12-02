@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_12_01_210000) do
+ActiveRecord::Schema[7.1].define(version: 2024_12_02_170757) do
   create_table "council_members", force: :cascade do |t|
     t.string "name"
     t.string "position"
@@ -19,6 +19,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_01_210000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "election_cycle_id"
+    t.date "next_election_date"
     t.integer "first_term_start_year"
     t.integer "terms_served", default: 1
     t.index ["election_cycle_id"], name: "index_council_members_on_election_cycle_id"
