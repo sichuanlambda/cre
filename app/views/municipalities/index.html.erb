@@ -24,6 +24,9 @@
     flex-direction: row;
     gap: 20px;
     justify-content: space-between;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 20px;
+    padding-top: 20px;
   }
 
   .info-column {
@@ -33,10 +36,18 @@
     flex-wrap: wrap;
   }
 
-  .election-info,
-  .development-score {
-    flex: 1 1 calc(50% - 10px);
+  .election-info {
+    margin-left: auto;
     min-width: 200px;
+    text-align: right;
+  }
+
+  .election-info p {
+    margin: 0;
+  }
+
+  .development-score .rating-description {
+    margin-top: -2px;   /* Reduce space between score and friendly text */
   }
 
   .council-members {
@@ -138,6 +149,61 @@
   .rating-description {
     color: #2ecc71;
   }
+
+  .news-articles ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .news-articles li {
+    margin-bottom: 15px;
+  }
+
+  .news-articles a {
+    font-size: 1.1em;
+    color: #333;
+    text-decoration: underline;
+    font-weight: normal;
+  }
+
+  .news-articles a:hover {
+    color: #666;
+  }
+
+  .news-articles .article-date {
+    font-size: 0.8em;
+    color: #666;
+    margin: 3px 0;
+  }
+
+  .news-articles .article-description {
+    margin-top: 5px;
+  }
+
+  .election-info {
+    font-size: 0.85em;
+    color: #666;
+  }
+
+  .election-info strong {
+    font-weight: normal;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .election-info {
+    margin-left: auto;
+  }
+
+  .development-score .rating-description {
+    margin-top: -2px;
+  }
 </style>
 <div class="municipalities-container">
   <h1>Municipality Council Tracker</h1>
@@ -170,14 +236,16 @@
 
           <div class="municipality-details">
             <div class="news-articles">
-              <h3>Recent News</h3>
+              <div class="section-header">
+                <h3>Recent News</h3>
+              </div>
               <% if municipality.news_articles.any? %>
                 <ul>
                   <% municipality.news_articles.limit(3).each do |article| %>
                     <li>
-                      <strong><%= link_to article.title, article.url, target: "_blank" %></strong>
-                      <p><%= article.published_at&.strftime("%B %d, %Y") %></p>
-                      <p><%= truncate(article.description, length: 150) %></p>
+                      <%= link_to article.title, article.url, target: "_blank" %>
+                      <p class="article-date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
+                      <p class="article-description"><%= truncate(article.description, length: 150) %></p>
                     </li>
                   <% end %>
                 </ul>
@@ -187,9 +255,11 @@
             </div>
 
             <div class="council-members">
-              <h3>Council Members</h3>
-              <div class="election-info">
-                <p><strong>Next Election:</strong> <%= municipality.next_election_date ? municipality.next_election_date.strftime("%B %d, %Y") : "Not scheduled" %></p>
+              <div class="section-header">
+                <h3>Council Members</h3>
+                <div class="election-info">
+                  <p><strong>Next Election:</strong> <%= municipality.next_election_date ? municipality.next_election_date.strftime("%B %d, %Y") : "Not scheduled" %></p>
+                </div>
               </div>
               <ul>
                 <% municipality.council_members.each do |member| %>
