@@ -382,14 +382,27 @@
     background: #f8f9fa;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    align-items: flex-start;
   }
 
   .request-section,
   .subscribe-section {
     flex: 0 0 300px;
     padding: 20px;
-    background: transparent;  /* Remove background since parent has it */
-    box-shadow: none;        /* Remove shadow since parent has it */
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .request-section h2,
+  .subscribe-section h2,
+  .request-section p,
+  .subscribe-section p {
+    text-align: center;
+    width: 100%;
   }
 
   .request-section {
@@ -406,13 +419,13 @@
     flex: 1;
     max-width: 600px;
     padding: 0 20px;
-    border-left: 1px solid #e0e0e0;   /* Add subtle dividers */
+    border-left: 1px solid #e0e0e0;
     border-right: 1px solid #e0e0e0;
   }
 
   .subscribe-section {
     flex: 0 0 250px;
-    align-self: flex-start;
+    align-self: flex-end;
   }
 
   @media (max-width: 1200px) {
