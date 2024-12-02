@@ -1,5 +1,15 @@
 class MunicipalitiesController < ApplicationController
   def index
+    @top_municipalities = Municipality.includes(:development_score)
+                                      .joins(:development_score)
+                                      .order('development_scores.current_score DESC')
+                                      .limit(5)
+
+    @bottom_municipalities = Municipality.includes(:development_score)
+                                         .joins(:development_score)
+                                         .order('development_scores.current_score ASC')
+                                         .limit(5)
+
     @municipalities = Municipality.includes(:council_members, :development_score, :news_articles)
                                   .search(params[:query])
   end
@@ -18,9 +28,9 @@ class MunicipalitiesController < ApplicationController
   end
 
   def request_new
-    # For now, just save to MunicipalityRequest model
     MunicipalityRequest.create(
-      name: params[:municipality_name]
+      name: params[:municipality_name],
+      email: params[:email]
     )
 
     redirect_to root_path, notice: 'Thank you for your request. We will review it shortly.'

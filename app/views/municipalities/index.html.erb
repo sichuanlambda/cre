@@ -264,32 +264,235 @@
   .form-button:hover {
     background: #0056b3;
   }
+
+  .form-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .form-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .form-button {
+    align-self: flex-start;  /* Align button with inputs */
+  }
+
+  .primary-cta {
+    max-width: 600px;
+    margin: 0 auto 40px;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+
+  .rankings-container {
+    margin: 40px auto;
+    padding: 0 20px;
+    max-width: 1200px;
+  }
+
+  .rankings-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .rankings-columns {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+  }
+
+  .ranking-column {
+    flex: 1;
+    max-width: 500px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .ranking-column h3 {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .ranking-item .score {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-right: 20px;
+    min-width: 40px;
+  }
+
+  .ranking-item .name {
+    font-size: 1.1em;
+  }
+
+  .secondary-cta {
+    text-align: center;
+    margin: 40px auto;
+    max-width: 500px;
+  }
+
+  .secondary-cta .form-container {
+    display: flex;
+    gap: 10px;
+  }
+
+  .form-button.primary {
+    background: #007bff;
+    padding: 12px 24px;
+    font-size: 1.1em;
+  }
+
+  .form-button.secondary {
+    background: #6c757d;
+  }
+
+  .subscribe-section {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .subscribe-section p {
+    margin-bottom: 15px;
+    color: #666;
+  }
+
+  .main-content-container {
+    display: flex;
+    gap: 30px;
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+
+  .request-section,
+  .subscribe-section {
+    flex: 0 0 300px;
+    padding: 20px;
+    background: transparent;  /* Remove background since parent has it */
+    box-shadow: none;        /* Remove shadow since parent has it */
+  }
+
+  .request-section {
+    .form-inputs {
+      margin-bottom: 10px;  /* Reduce space below inputs */
+    }
+    
+    p {
+      margin-bottom: 15px;  /* Reduce space below description */
+    }
+  }
+
+  .rankings-container {
+    flex: 1;
+    max-width: 600px;
+    padding: 0 20px;
+    border-left: 1px solid #e0e0e0;   /* Add subtle dividers */
+    border-right: 1px solid #e0e0e0;
+  }
+
+  .subscribe-section {
+    flex: 0 0 250px;
+    align-self: flex-start;
+  }
+
+  @media (max-width: 1200px) {
+    .main-content-container {
+      flex-direction: column;
+    }
+    
+    .rankings-container {
+      border-left: none;
+      border-right: none;
+      border-top: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 20px 0;
+      margin: 20px 0;
+    }
+  }
 </style>
 
 <div class="page-header">
   <h1>Municipality Council Tracker</h1>
 </div>
 
-<div class="forms-container">
-  <div class="form-section">
+<div class="main-content-container">
+  <div class="request-section">
     <h2>Request New Municipality</h2>
-    <p>Don't see your municipality? Request to have it added to our tracker.</p>
+    <p>Don't see your municipality? Help us expand our coverage.</p>
     <%= form_with url: request_municipality_path, method: :post, class: "form-container" do |f| %>
-      <%= f.text_field :municipality_name, 
-          placeholder: "Enter municipality name...", 
-          class: "form-input" %>
-      <%= f.submit "Request", class: "form-button" %>
+      <div class="form-inputs">
+        <%= f.text_field :municipality_name, 
+            placeholder: "Enter municipality name...", 
+            required: true,
+            class: "form-input" %>
+        <%= f.email_field :email, 
+            placeholder: "Your email...", 
+            required: true,
+            class: "form-input" %>
+      </div>
+      <%= f.submit "Request Municipality", class: "form-button primary" %>
     <% end %>
   </div>
 
-  <div class="form-section">
-    <h2>Get Municipality Updates</h2>
-    <p>Subscribe to receive updates about your municipality.</p>
-    <%= form_with url: subscribe_updates_path, method: :post, class: "form-container" do |f| %>
+  <div class="rankings-container">
+    <h2>City Council Rankings</h2>
+    <div class="rankings-columns">
+      <div class="ranking-column">
+        <h3>Most Development Friendly</h3>
+        <div class="ranking-list">
+          <% @top_municipalities.each_with_index do |municipality, index| %>
+            <div class="ranking-item">
+              <span class="rank">#<%= index + 1 %></span>
+              <span class="score"><%= municipality.development_score&.current_score %></span>
+              <span class="name"><%= municipality.name %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      
+      <div class="ranking-column">
+        <h3>Least Development Friendly</h3>
+        <div class="ranking-list">
+          <% @bottom_municipalities.each_with_index do |municipality, index| %>
+            <div class="ranking-item">
+              <span class="rank">#<%= index + 1 %></span>
+              <span class="score"><%= municipality.development_score&.current_score %></span>
+              <span class="name"><%= municipality.name %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subscribe-section">
+    <h2>Get Updates</h2>
+    <p>Stay informed about your municipality</p>
+    <%= form_with url: subscribe_updates_path, method: :post, class: "form-container compact" do |f| %>
       <%= f.email_field :email, 
-          placeholder: "Enter your email...", 
+          placeholder: "Enter your email for updates...", 
           class: "form-input" %>
-      <%= f.submit "Subscribe", class: "form-button" %>
+      <%= f.submit "Subscribe", class: "form-button secondary" %>
     <% end %>
   </div>
 </div>
