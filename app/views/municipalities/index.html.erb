@@ -12,34 +12,37 @@
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     flex: 1 1 calc(33.333% - 40px);
+    min-width: 300px;
+    max-width: calc(50% - 40px);
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 
   .municipality-details {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+    display: flex;
+    flex-direction: row;
     gap: 20px;
+    justify-content: space-between;
   }
 
   .info-column {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 20px;
+    flex-wrap: wrap;
   }
 
-  .election-info {
-    flex: 0 0 auto;
-    padding: 10px 15px;
-  }
-
+  .election-info,
   .development-score {
-    flex: 1;
-    padding: 15px;
+    flex: 1 1 calc(50% - 10px);
+    min-width: 200px;
   }
 
   .council-members {
     position: relative;
+    width: 60%;
+    margin-left: auto;
   }
 
   .council-members .header {
@@ -97,7 +100,7 @@
   }
 
   .news-articles {
-    grid-column: span 2;
+    flex: 1;
   }
 
   .council-members ul {
@@ -110,6 +113,30 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
+  }
+
+  .development-score {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    text-align: right;
+  }
+
+  .development-score h3 {
+    font-size: 0.8em;
+    margin-top: 5px;
+    order: 2;
+    color: #666;
+  }
+
+  .development-score .score {
+    font-size: 1.8em;
+    font-weight: bold;
+    order: 1;
+  }
+
+  .rating-description {
+    color: #2ecc71;
   }
 </style>
 <div class="municipalities-container">
@@ -127,40 +154,21 @@
       <% @municipalities.each do |municipality| %>
         <div class="municipality-card">
           <h2><%= municipality.name %></h2>
+          
+          <div class="development-score">
+            <div class="score"><%= municipality.development_score&.current_score || "N/A" %></div>
+            <h3>Development Score</h3>
+            <p class="rating-description"><%= 
+              case municipality.development_score&.rating_description
+              when /very development friendly/i then "Very Friendly"
+              when /development friendly/i then "Friendly"
+              when /somewhat development friendly/i then "Somewhat Friendly"
+              else "No rating"
+              end
+            %></p>
+          </div>
+
           <div class="municipality-details">
-            <div class="council-members">
-              <h3>Council Members</h3>
-              <ul>
-                <% municipality.council_members.each do |member| %>
-                  <li>
-                    <strong><%= member.name %></strong> - <%= member.position %>
-                    <% if member.social_links.present? %>
-                      <div class="social-links">
-                        <% member.social_links.each do |platform, url| %>
-                          <%= link_to url, class: "social-link #{platform}", target: "_blank", title: platform.to_s.titleize do %>
-                            <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
-                          <% end %>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  </li>
-                <% end %>
-              </ul>
-            </div>
-
-            <div class="info-column">
-              <div class="election-info">
-                <h3>Election Info</h3>
-                <p><strong>Next:</strong> <%= municipality.next_election_date ? municipality.next_election_date.strftime("%B %d, %Y") : "Not scheduled" %></p>
-              </div>
-
-              <div class="development-score">
-                <h3>Development Score</h3>
-                <p><strong><%= municipality.development_score&.current_score || "N/A" %></strong>/100</p>
-                <p class="rating-description"><%= municipality.development_score&.rating_description || "No rating available" %></p>
-              </div>
-            </div>
-
             <div class="news-articles">
               <h3>Recent News</h3>
               <% if municipality.news_articles.any? %>
@@ -176,6 +184,29 @@
               <% else %>
                 <p>No recent news available</p>
               <% end %>
+            </div>
+
+            <div class="council-members">
+              <h3>Council Members</h3>
+              <div class="election-info">
+                <p><strong>Next Election:</strong> <%= municipality.next_election_date ? municipality.next_election_date.strftime("%B %d, %Y") : "Not scheduled" %></p>
+              </div>
+              <ul>
+                <% municipality.council_members.each do |member| %>
+                  <li>
+                    <strong><%= member.name %></strong> <%= member.position %>
+                    <% if member.social_links.present? %>
+                      <div class="social-links">
+                        <% member.social_links.each do |platform, url| %>
+                          <%= link_to url, class: "social-link #{platform}", target: "_blank", title: platform.to_s.titleize do %>
+                            <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
             </div>
           </div>
         </div>
