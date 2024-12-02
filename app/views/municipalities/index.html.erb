@@ -1,10 +1,123 @@
+<style>
+  .municipality-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .municipality-card {
+    background: #f0f4f8;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    flex: 1 1 calc(33.333% - 40px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .municipality-details {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+  }
+
+  .info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .election-info {
+    flex: 0 0 auto;
+    padding: 10px 15px;
+  }
+
+  .development-score {
+    flex: 1;
+    padding: 15px;
+  }
+
+  .council-members {
+    position: relative;
+  }
+
+  .council-members .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+  }
+
+  .council-members .content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+  }
+
+  .council-members.active .content {
+    max-height: 500px;
+  }
+
+  .toggle-icon {
+    transition: transform 0.3s ease;
+  }
+
+  .council-members.active .toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  .rating-description {
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .social-links {
+    margin-top: 5px;
+  }
+
+  .social-link {
+    margin-left: 10px;
+    text-decoration: none;
+    color: #666;
+    font-size: 1.1em;
+  }
+
+  .social-link:hover {
+    color: #007bff;
+  }
+
+  .social-link.twitter:hover {
+    color: #1DA1F2;
+  }
+
+  .social-link.linkedin:hover {
+    color: #0077B5;
+  }
+
+  .news-articles {
+    grid-column: span 2;
+  }
+
+  .council-members ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .council-members li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+</style>
 <div class="municipalities-container">
   <h1>Municipality Council Tracker</h1>
 
   <%= form_with url: search_municipalities_path, method: :get, data: { turbo_frame: "results" } do |f| %>
     <div class="search-container">
-      <%= f.text_field :query, placeholder: "Search municipalities...", 
-                              class: "search-input" %>
+      <%= f.text_field :query, placeholder: "Search municipalities...", class: "search-input" %>
       <%= f.submit "Search", class: "search-button" %>
     </div>
   <% end %>
@@ -14,72 +127,56 @@
       <% @municipalities.each do |municipality| %>
         <div class="municipality-card">
           <h2><%= municipality.name %></h2>
-          
-          <div class="council-members">
-            <h3>Current Council Members</h3>
-            <div class="council-members-list">
-              <% municipality.council_members.each do |member| %>
-                <div class="member-card">
-                  <h4><%= member.name %></h4>
-                  <p class="position"><%= member.position %></p>
-                  
-                  <% if member.social_links.present? %>
-                    <div class="social-links">
-                      <% member.social_links.each do |platform, url| %>
-                        <%= link_to platform.to_s.titleize, url, 
-                                    class: "social-link #{platform}",
-                                    target: "_blank" %>
-                      <% end %>
-                    </div>
+          <div class="municipality-details">
+            <div class="council-members">
+              <h3>Council Members</h3>
+              <ul>
+                <% municipality.council_members.each do |member| %>
+                  <li>
+                    <strong><%= member.name %></strong> - <%= member.position %>
+                    <% if member.social_links.present? %>
+                      <div class="social-links">
+                        <% member.social_links.each do |platform, url| %>
+                          <%= link_to url, class: "social-link #{platform}", target: "_blank", title: platform.to_s.titleize do %>
+                            <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+
+            <div class="info-column">
+              <div class="election-info">
+                <h3>Election Info</h3>
+                <p><strong>Next:</strong> <%= municipality.next_election_date ? municipality.next_election_date.strftime("%B %d, %Y") : "Not scheduled" %></p>
+              </div>
+
+              <div class="development-score">
+                <h3>Development Score</h3>
+                <p><strong><%= municipality.development_score&.current_score || "N/A" %></strong>/100</p>
+                <p class="rating-description"><%= municipality.development_score&.rating_description || "No rating available" %></p>
+              </div>
+            </div>
+
+            <div class="news-articles">
+              <h3>Recent News</h3>
+              <% if municipality.news_articles.any? %>
+                <ul>
+                  <% municipality.news_articles.limit(3).each do |article| %>
+                    <li>
+                      <strong><%= link_to article.title, article.url, target: "_blank" %></strong>
+                      <p><%= article.published_at&.strftime("%B %d, %Y") %></p>
+                      <p><%= truncate(article.description, length: 150) %></p>
+                    </li>
                   <% end %>
-                  
-                  <p class="term-status"><%= member.term_status %></p>
-                </div>
+                </ul>
+              <% else %>
+                <p>No recent news available</p>
               <% end %>
             </div>
-          </div>
-
-          <div class="election-info">
-            <h3>Election Information</h3>
-            <% if municipality.next_election_date %>
-              <p>Next Election: <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
-            <% else %>
-              <p>Next Election: Not scheduled</p>
-            <% end %>
-            
-          </div>
-
-          <div class="development-score">
-            <h3>Development Friendliness</h3>
-            <div class="development-score-display">
-              <div class="score-number">
-                <% if municipality.development_score&.current_score %>
-                  <%= municipality.development_score.current_score %>/100
-                <% else %>
-                  N/A
-                <% end %>
-              </div>
-              <div class="score-description">
-                <%= municipality.development_score&.rating_description || "No rating available" %>
-              </div>
-            </div>
-          </div>
-
-          <div class="news-articles">
-            <h3>Recent News</h3>
-            <% if municipality.news_articles.any? %>
-              <div class="news-articles-list">
-                <% municipality.news_articles.limit(3).each do |article| %>
-                  <div class="news-article">
-                    <h4><%= link_to article.title, article.url, target: "_blank" %></h4>
-                    <p class="date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
-                    <p class="description"><%= truncate(article.description, length: 150) %></p>
-                  </div>
-                <% end %>
-              </div>
-            <% else %>
-              <p class="no-news">No recent news available</p>
-            <% end %>
           </div>
         </div>
       <% end %>
@@ -87,92 +184,12 @@
   <% end %>
 </div>
 
-<style>
-  .municipality-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    padding: 20px;
-  }
-
-  .municipality-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .development-score-display {
-    text-align: center;
-    margin: 15px 0;
-  }
-
-  .score-number {
-    font-size: 24px;
-    font-weight: bold;
-    color: #2c3e50;
-  }
-
-  .score-description {
-    color: #7f8c8d;
-    margin-top: 5px;
-  }
-
-  .election-info {
-    margin: 15px 0;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 4px;
-  }
-
-  .election-info h3 {
-    margin-bottom: 10px;
-    color: #2c3e50;
-  }
-
-  .news-articles {
-    margin: 15px 0;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 4px;
-  }
-
-  .news-articles h3 {
-    margin-bottom: 10px;
-    color: #2c3e50;
-  }
-
-  .news-article {
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e9ecef;
-  }
-
-  .news-article:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
-
-  .news-article h4 {
-    margin: 0;
-    font-size: 1.1em;
-  }
-
-  .news-article .date {
-    color: #6c757d;
-    font-size: 0.9em;
-    margin: 5px 0;
-  }
-
-  .news-article .description {
-    color: #495057;
-    font-size: 0.95em;
-    line-height: 1.4;
-  }
-
-  .no-news {
-    color: #6c757d;
-    font-style: italic;
-  }
-</style> 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.collapsible .header').forEach(header => {
+    header.addEventListener('click', function() {
+      this.closest('.collapsible').classList.toggle('active');
+    });
+  });
+});
+</script> 
