@@ -292,9 +292,10 @@
   }
 
   .rankings-container {
-    margin: 40px auto;
+    flex: 1;
+    max-width: 600px;
     padding: 0 20px;
-    max-width: 1200px;
+    align-self: flex-end;
   }
 
   .rankings-container h2 {
@@ -323,6 +324,14 @@
     border-bottom: 2px solid #f0f0f0;
   }
 
+  .ranking-column.most .highlight {
+    color: #2ecc71;    /* Green color for "Most" */
+  }
+
+  .ranking-column.least .highlight {
+    color: #e74c3c;    /* Red color for "Least" */
+  }
+
   .ranking-item {
     display: flex;
     align-items: center;
@@ -330,15 +339,23 @@
     border-bottom: 1px solid #f0f0f0;
   }
 
-  .ranking-item .score {
-    font-size: 1.2em;
+  .ranking-item .rank {
+    margin-right: 15px;
+    min-width: 30px;
+    font-size: 1.4em;
     font-weight: bold;
-    margin-right: 20px;
-    min-width: 40px;
+    color: #333;
   }
 
   .ranking-item .name {
+    flex: 1;
     font-size: 1.1em;
+  }
+
+  .ranking-item .score {
+    margin-left: auto;
+    font-weight: bold;
+    font-size: 1.2em;
   }
 
   .secondary-cta {
@@ -363,14 +380,32 @@
   }
 
   .subscribe-section {
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    flex: 0 0 250px;
+    align-self: flex-end;
+    padding: 10px 20px;
   }
 
-  .subscribe-section p {
-    margin-bottom: 15px;
-    color: #666;
+  .subscribe-section h2 {
+    margin-bottom: 10px;
+  }
+
+  .subscribe-section .form-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .subscribe-section .form-input {
+    flex: 1;
+    margin-right: auto;
+  }
+
+  .subscribe-section .form-button {
+    width: auto;
+    min-width: fit-content;
   }
 
   .main-content-container {
@@ -406,26 +441,13 @@
   }
 
   .request-section {
-    .form-inputs {
-      margin-bottom: 10px;  /* Reduce space below inputs */
-    }
-    
-    p {
-      margin-bottom: 15px;  /* Reduce space below description */
-    }
-  }
-
-  .rankings-container {
-    flex: 1;
-    max-width: 600px;
-    padding: 0 20px;
-    border-left: 1px solid #e0e0e0;
-    border-right: 1px solid #e0e0e0;
-  }
-
-  .subscribe-section {
-    flex: 0 0 250px;
+    flex: 0 0 300px;
     align-self: flex-end;
+    padding: 10px 20px;
+  }
+
+  .request-section .form-inputs {
+    margin-bottom: 10px;
   }
 
   @media (max-width: 1200px) {
@@ -434,10 +456,6 @@
     }
     
     .rankings-container {
-      border-left: none;
-      border-right: none;
-      border-top: 1px solid #e0e0e0;
-      border-bottom: 1px solid #e0e0e0;
       padding: 20px 0;
       margin: 20px 0;
     }
@@ -451,7 +469,6 @@
 <div class="main-content-container">
   <div class="request-section">
     <h2>Request New Municipality</h2>
-    <p>Don't see your municipality? Help us expand our coverage.</p>
     <%= form_with url: request_municipality_path, method: :post, class: "form-container" do |f| %>
       <div class="form-inputs">
         <%= f.text_field :municipality_name, 
@@ -470,27 +487,27 @@
   <div class="rankings-container">
     <h2>City Council Rankings</h2>
     <div class="rankings-columns">
-      <div class="ranking-column">
-        <h3>Most Development Friendly</h3>
+      <div class="ranking-column most">
+        <h3><span class="highlight">Most</span> Development Friendly</h3>
         <div class="ranking-list">
           <% @top_municipalities.each_with_index do |municipality, index| %>
             <div class="ranking-item">
               <span class="rank">#<%= index + 1 %></span>
-              <span class="score"><%= municipality.development_score&.current_score %></span>
               <span class="name"><%= municipality.name %></span>
+              <span class="score"><%= municipality.development_score&.current_score %></span>
             </div>
           <% end %>
         </div>
       </div>
       
-      <div class="ranking-column">
-        <h3>Least Development Friendly</h3>
+      <div class="ranking-column least">
+        <h3><span class="highlight">Least</span> Development Friendly</h3>
         <div class="ranking-list">
           <% @bottom_municipalities.each_with_index do |municipality, index| %>
             <div class="ranking-item">
               <span class="rank">#<%= index + 1 %></span>
-              <span class="score"><%= municipality.development_score&.current_score %></span>
               <span class="name"><%= municipality.name %></span>
+              <span class="score"><%= municipality.development_score&.current_score %></span>
             </div>
           <% end %>
         </div>
@@ -500,7 +517,6 @@
 
   <div class="subscribe-section">
     <h2>Get Updates</h2>
-    <p>Stay informed about your municipality</p>
     <%= form_with url: subscribe_updates_path, method: :post, class: "form-container compact" do |f| %>
       <%= f.email_field :email, 
           placeholder: "Enter your email for updates...", 
