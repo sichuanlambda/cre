@@ -2,6 +2,7 @@ class Municipality < ApplicationRecord
   has_many :council_members, dependent: :destroy
   has_many :news_articles, dependent: :destroy
   has_one :development_score, dependent: :destroy
+  has_many :municipal_resources
 
   validates :name, presence: true, uniqueness: true
 

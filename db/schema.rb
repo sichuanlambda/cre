@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_12_02_170757) do
+ActiveRecord::Schema[7.1].define(version: 2024_12_02_214248) do
   create_table "council_members", force: :cascade do |t|
     t.string "name"
     t.string "position"
@@ -44,6 +44,18 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_02_170757) do
     t.index ["municipality_id"], name: "index_election_cycles_on_municipality_id"
   end
 
+  create_table "municipal_resources", force: :cascade do |t|
+    t.string "title"
+    t.string "url"
+    t.text "description"
+    t.string "category"
+    t.datetime "last_updated"
+    t.integer "municipality_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["municipality_id"], name: "index_municipal_resources_on_municipality_id"
+  end
+
   create_table "municipalities", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -68,5 +80,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_02_170757) do
   add_foreign_key "council_members", "municipalities"
   add_foreign_key "development_scores", "municipalities"
   add_foreign_key "election_cycles", "municipalities"
+  add_foreign_key "municipal_resources", "municipalities"
   add_foreign_key "news_articles", "municipalities"
 end

@@ -6,7 +6,7 @@ class MunicipalitiesController < ApplicationController
                                       .limit(5)
 
     @bottom_municipalities = Municipality.includes(:development_score)
-                                         .joins(:development_score)
+                                      .joins(:development_score)
                                          .order('development_scores.current_score ASC')
                                          .limit(5)
 

@@ -4,10 +4,12 @@ class MunicipalityDataService
       "council_members" => fetch_council_members(municipality),
       "reelection_dates" => fetch_reelection_dates(municipality),
       "development_score" => calculate_development_score(municipality),
-      "news_articles" => fetch_news_articles(municipality)
+      "news_articles" => fetch_news_articles(municipality),
+      "municipal_resources" => fetch_municipal_resources(municipality)
     }
 
     save_news_articles(municipality, data["news_articles"])
+    save_municipal_resources(municipality, data["municipal_resources"])
     data
   end
 
@@ -89,7 +91,7 @@ class MunicipalityDataService
 
     begin
       JSON.parse(response['choices'].first['message']['content'])
-    rescue JSON::ParseError => e
+    rescue JSON::ParserError => e
       Rails.logger.error "Failed to parse reelection response: #{e.message}"
       []
     end
@@ -131,7 +133,14 @@ class MunicipalityDataService
 
     news_api = News.new(ENV['NEWS_API_KEY'])
     articles = news_api.get_everything(
-      q: "(development OR rezone OR \"public opposition\") AND (#{municipality.name}) AND (mayor OR \"city council\" OR municipal)",
+      q: "(" \
+         "\"zoning change\" OR \"development project\" OR \"building permit\" OR " \
+         "\"housing development\" OR \"commercial development\" OR \"urban planning\" OR " \
+         "\"city planning\" OR \"property development\" OR \"construction project\" OR " \
+         "\"neighborhood opposition\" OR \"community feedback\" OR \"public hearing\"" \
+         ") AND " \
+         "(\"#{municipality.name}\") AND " \
+         "(\"city council\" OR \"planning commission\" OR \"zoning board\" OR municipal OR mayor)",
       language: 'en',
       sortBy: 'publishedAt',
       pageSize: 5
@@ -167,10 +176,33 @@ class MunicipalityDataService
   end
 
   def self.extract_social_links(member_element)
-    {
-      "twitter" => member_element.css('a[href*="twitter"]').first&.attr('href'),
-      "linkedin" => member_element.css('a[href*="linkedin"]').first&.attr('href')
+    social_links = {}
+
+    social_patterns = {
+      "twitter" => /(twitter\.com|x\.com)/,
+      "linkedin" => /linkedin\.com/,
+      "facebook" => /facebook\.com/,
+      "instagram" => /instagram\.com/,
+      "youtube" => /youtube\.com/
     }
+
+    member_element.css('a[href]').each do |link|
+      href = normalize_url(link.attr('href'))
+      next unless href
+
+      social_patterns.each do |platform, pattern|
+        if href =~ pattern
+          social_links[platform] = href
+        end
+      end
+
+      if href =~ /(?:social|profile)/ || href.include?('://')
+        social_links["other"] ||= []
+        social_links["other"] << href unless social_links["other"].include?(href) # Prevent duplicates
+      end
+    end
+
+    social_links
   end
 
   def self.get_council_page_url(municipality_name)
@@ -183,6 +215,243 @@ class MunicipalityDataService
       'https://www.denvergov.org/Government/Departments/City-Council'
     else
       raise "No URL defined for #{municipality_name}"
+    end
+  end
+
+  def self.normalize_url(url)
+    return nil unless url
+
+    # Remove trailing slashes, whitespace
+    url = url.strip.chomp('/')
+
+    # Ensure https:// prefix
+    url = "https://#{url}" unless url.start_with?('http://', 'https://')
+
+    # Handle relative URLs if needed
+    return nil if url.start_with?('mailto:', 'tel:')
+
+    # Remove URL parameters unless they seem important (like username)
+    url = url.split('?').first unless url =~ /\/(profile|user|@)/
+
+    url
+  end
+
+  def self.fetch_municipal_resources(municipality)
+    # First, try to find resources by searching the municipality website
+    website_resources = search_municipality_website(municipality)
+
+    # Then use GPT to analyze and supplement the findings
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a municipal research specialist. Analyze and categorize municipal resources. Your response must be valid JSON only. Format: object with categories as keys (zoning_documents, council_meetings, permit_applications, development_plans, public_notices) and arrays of objects as values. Each resource object should have: title, url, description, and last_updated (if available, otherwise null)."
+          },
+          {
+            role: "user",
+            content: "Analyze and categorize these municipal resources for #{municipality.name}, #{municipality.state}. Add any missing important resources you're aware of. Resources found:\n#{website_resources.to_json}"
+          }
+        ]
+      }
+    )
+
+    parse_municipal_resources_response(response) || {
+      "zoning_documents" => [],
+      "council_meetings" => [],
+      "permit_applications" => [],
+      "development_plans" => [],
+      "public_notices" => []
+    }
+  end
+
+  def self.search_municipality_website(municipality)
+    base_url = get_municipality_base_url(municipality)
+    return [] unless base_url
+
+    doc = fetch_page(base_url)
+    return [] unless doc
+
+    resources = []
+
+    # Common paths to check
+    important_paths = [
+      '/zoning', '/planning', '/development',
+      '/permits', '/council', '/meetings',
+      '/documents', '/resources', '/notices'
+    ]
+
+    # Common keywords to search for
+    keywords = [
+      'zoning', 'ordinance', 'permit', 'application',
+      'council meeting', 'agenda', 'minutes',
+      'development plan', 'master plan',
+      'public notice', 'hearing'
+    ]
+
+    # Search main navigation and common paths
+    doc.css('nav a, .navigation a, .menu a, a[href*="document"], a[href*="pdf"]').each do |link|
+      href = link.attr('href')
+      text = link.text.strip.downcase
+
+      next unless href && !href.empty?
+
+      # Check if link contains any of our keywords
+      if keywords.any? { |keyword| text.include?(keyword) }
+        resources << {
+          "title" => link.text.strip,
+          "url" => normalize_url(href, base_url),
+          "description" => extract_link_context(link),
+          "last_updated" => extract_date_from_context(link)
+        }
+      end
+    end
+
+    # Search important paths
+    important_paths.each do |path|
+      page_url = "#{base_url}#{path}"
+      if page_doc = fetch_page(page_url)
+        page_doc.css('a[href*="pdf"], a[href*="doc"], a[href*="download"]').each do |link|
+          resources << {
+            "title" => link.text.strip,
+            "url" => normalize_url(link.attr('href'), base_url),
+            "description" => extract_link_context(link),
+            "last_updated" => extract_date_from_context(link)
+          }
+        end
+      end
+    end
+
+    resources.compact.uniq { |r| r["url"] }
+  end
+
+  def self.get_municipality_base_url(municipality)
+    # First try cached/known URLs
+    known_urls = {
+      'kansas city' => 'https://www.kcmo.gov',
+      'oklahoma city' => 'https://www.okc.gov',
+      'denver' => 'https://www.denvergov.org'
+    }
+
+    return known_urls[municipality.name.downcase] if known_urls[municipality.name.downcase]
+
+    # Otherwise, ask GPT for the official website
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a municipal website expert. Return ONLY the official website URL for the specified municipality. Return null if unsure. No explanation needed."
+          },
+          {
+            role: "user",
+            content: "What is the official government website URL for #{municipality.name}, #{municipality.state}?"
+          }
+        ]
+      }
+    )
+
+    url = response.dig('choices', 0, 'message', 'content')&.strip
+
+    # Validate the URL format and ensure it's a government domain
+    if url && url =~ URI::DEFAULT_PARSER.make_regexp &&
+       (url.include?('.gov') || url.include?('.us') || url.include?('.org'))
+      url
+    else
+      Rails.logger.warn "Could not find valid URL for #{municipality.name}, #{municipality.state}"
+      nil
+    end
+  rescue => e
+    Rails.logger.error "Error finding URL for #{municipality.name}: #{e.message}"
+    nil
+  end
+
+  def self.extract_link_context(link)
+    # Try to get context from surrounding text
+    context = []
+
+    # Check parent paragraph or list item
+    parent = link.parent
+    while parent && !%w[div section article].include?(parent.name)
+      context << parent.text.strip if parent.text.strip != link.text.strip
+      parent = parent.parent
+    end
+
+    # Check for title or aria-label attributes
+    context << link['title'] if link['title']
+    context << link['aria-label'] if link['aria-label']
+
+    context.compact.join(' ').strip
+  end
+
+  def self.extract_date_from_context(link)
+    # Look for dates in the link text or surrounding context
+    context = extract_link_context(link)
+    date_matches = context.match(/\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}|\w+ \d{1,2},? \d{4}/)
+    date_matches ? Date.parse(date_matches[0]) : nil
+  rescue
+    nil
+  end
+
+  def self.normalize_url(url, base_url = nil)
+    return nil unless url
+
+    # Remove trailing slashes, whitespace
+    url = url.strip.chomp('/')
+
+    # Handle relative URLs
+    if url.start_with?('/')
+      url = "#{base_url}#{url}"
+    elsif !url.start_with?('http://', 'https://')
+      url = "#{base_url}/#{url}"
+    end
+
+    # Ensure https:// prefix
+    url = url.gsub('http://', 'https://')
+
+    # Remove URL parameters unless they seem important
+    url = url.split('?').first unless url =~ /\/(download|view|id)/
+
+    url
+  end
+
+  def self.parse_municipal_resources_response(response)
+    return nil unless response['choices']&.first&.dig('message', 'content')
+
+    begin
+      resources = JSON.parse(response['choices'].first['message']['content'])
+      validate_and_normalize_resources(resources)
+    rescue JSON::ParserError => e
+      Rails.logger.error "Failed to parse municipal resources response: #{e.message}"
+      nil
+    end
+  end
+
+  def self.validate_and_normalize_resources(resources)
+    resources.transform_values do |category_resources|
+      category_resources.map do |resource|
+        {
+          "title" => resource["title"],
+          "url" => normalize_url(resource["url"]),
+          "description" => resource["description"],
+          "last_updated" => resource["last_updated"]
+        }.compact
+      end
+    end
+  end
+
+  def self.save_municipal_resources(municipality, resources)
+    resources.each do |category, category_resources|
+      category_resources.each do |resource|
+        municipality.municipal_resources.find_or_create_by!(url: resource["url"]) do |r|
+          r.title = resource["title"]
+          r.description = resource["description"]
+          r.category = category
+          r.last_updated = resource["last_updated"]
+        end
+      end
     end
   end
 end
