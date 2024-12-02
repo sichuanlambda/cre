@@ -12,4 +12,7 @@ Rails.application.routes.draw do
       get :search
     end
   end
+
+  post '/request_municipality', to: 'municipalities#request_new'
+  post '/subscribe_updates', to: 'municipalities#subscribe'
 end

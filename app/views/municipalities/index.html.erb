@@ -204,86 +204,164 @@
   .development-score .rating-description {
     margin-top: -2px;
   }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .forms-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 40px;
+    padding: 0 20px;
+  }
+
+  .form-section {
+    flex: 0 1 400px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .form-section h2 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: #333;
+  }
+
+  .form-section p {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 15px;
+  }
+
+  .form-container {
+    display: flex;
+    gap: 10px;
+  }
+
+  .form-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+  }
+
+  .form-button {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .form-button:hover {
+    background: #0056b3;
+  }
 </style>
-<div class="municipalities-container">
+
+<div class="page-header">
   <h1>Municipality Council Tracker</h1>
+</div>
 
-  <%= form_with url: search_municipalities_path, method: :get, data: { turbo_frame: "results" } do |f| %>
-    <div class="search-container">
-      <%= f.text_field :query, placeholder: "Search municipalities...", class: "search-input" %>
-      <%= f.submit "Search", class: "search-button" %>
-    </div>
-  <% end %>
+<div class="forms-container">
+  <div class="form-section">
+    <h2>Request New Municipality</h2>
+    <p>Don't see your municipality? Request to have it added to our tracker.</p>
+    <%= form_with url: request_municipality_path, method: :post, class: "form-container" do |f| %>
+      <%= f.text_field :municipality_name, 
+          placeholder: "Enter municipality name...", 
+          class: "form-input" %>
+      <%= f.submit "Request", class: "form-button" %>
+    <% end %>
+  </div>
 
-  <%= turbo_frame_tag "results" do %>
-    <div class="municipality-list">
-      <% @municipalities.each do |municipality| %>
-        <div class="municipality-card">
-          <h2><%= municipality.name %></h2>
-          
-          <div class="development-score">
-            <div class="score"><%= municipality.development_score&.current_score || "N/A" %></div>
-            <h3>Development Score</h3>
-            <p class="rating-description"><%= 
-              case municipality.development_score&.rating_description
-              when /very development friendly/i then "Very Friendly"
-              when /development friendly/i then "Friendly"
-              when /somewhat development friendly/i then "Somewhat Friendly"
-              else "No rating"
-              end
-            %></p>
-          </div>
+  <div class="form-section">
+    <h2>Get Municipality Updates</h2>
+    <p>Subscribe to receive updates about your municipality.</p>
+    <%= form_with url: subscribe_updates_path, method: :post, class: "form-container" do |f| %>
+      <%= f.email_field :email, 
+          placeholder: "Enter your email...", 
+          class: "form-input" %>
+      <%= f.submit "Subscribe", class: "form-button" %>
+    <% end %>
+  </div>
+</div>
 
-          <div class="municipality-details">
-            <div class="news-articles">
-              <div class="section-header">
-                <h3>Recent News</h3>
-              </div>
-              <% if municipality.news_articles.any? %>
-                <ul>
-                  <% municipality.news_articles.limit(3).each do |article| %>
-                    <li>
-                      <%= link_to article.title, article.url, target: "_blank" %>
-                      <p class="article-date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
-                      <p class="article-description"><%= truncate(article.description, length: 150) %></p>
-                    </li>
-                  <% end %>
-                </ul>
-              <% else %>
-                <p>No recent news available</p>
-              <% end %>
+<%= turbo_frame_tag "results" do %>
+  <div class="municipality-list">
+    <% @municipalities.each do |municipality| %>
+      <div class="municipality-card">
+        <h2><%= municipality.name %></h2>
+        
+        <div class="development-score">
+          <div class="score"><%= municipality.development_score&.current_score || "N/A" %></div>
+          <h3>Development Score</h3>
+          <p class="rating-description"><%= 
+            case municipality.development_score&.rating_description
+            when /very development friendly/i then "Very Friendly"
+            when /development friendly/i then "Friendly"
+            when /somewhat development friendly/i then "Somewhat Friendly"
+            else "No rating"
+            end
+          %></p>
+        </div>
+
+        <div class="municipality-details">
+          <div class="news-articles">
+            <div class="section-header">
+              <h3>Recent News</h3>
             </div>
-
-            <div class="council-members">
-              <div class="section-header">
-                <h3>Council Members</h3>
-                <div class="election-info">
-                  <p><strong>Next Election:</strong> <%= municipality.next_election_date ? municipality.next_election_date.strftime("%B %d, %Y") : "Not scheduled" %></p>
-                </div>
-              </div>
+            <% if municipality.news_articles.any? %>
               <ul>
-                <% municipality.council_members.each do |member| %>
+                <% municipality.news_articles.limit(3).each do |article| %>
                   <li>
-                    <strong><%= member.name %></strong> <%= member.position %>
-                    <% if member.social_links.present? %>
-                      <div class="social-links">
-                        <% member.social_links.each do |platform, url| %>
-                          <%= link_to url, class: "social-link #{platform}", target: "_blank", title: platform.to_s.titleize do %>
-                            <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
-                          <% end %>
-                        <% end %>
-                      </div>
-                    <% end %>
+                    <%= link_to article.title, article.url, target: "_blank" %>
+                    <p class="article-date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
+                    <p class="article-description"><%= truncate(article.description, length: 150) %></p>
                   </li>
                 <% end %>
               </ul>
+            <% else %>
+              <p>No recent news available</p>
+            <% end %>
+          </div>
+
+          <div class="council-members">
+            <div class="section-header">
+              <h3>Council Members</h3>
+              <div class="election-info">
+                <p><strong>Next Election:</strong> <%= municipality.next_election_date ? municipality.next_election_date.strftime("%B %d, %Y") : "Not scheduled" %></p>
+              </div>
             </div>
+            <ul>
+              <% municipality.council_members.each do |member| %>
+                <li>
+                  <strong><%= member.name %></strong> <%= member.position %>
+                  <% if member.social_links.present? %>
+                    <div class="social-links">
+                      <% member.social_links.each do |platform, url| %>
+                        <%= link_to url, class: "social-link #{platform}", target: "_blank", title: platform.to_s.titleize do %>
+                          <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
           </div>
         </div>
-      <% end %>
-    </div>
-  <% end %>
-</div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
