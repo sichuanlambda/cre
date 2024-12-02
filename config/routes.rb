@@ -15,4 +15,7 @@ Rails.application.routes.draw do
 
   post '/request_municipality', to: 'municipalities#request_new'
   post '/subscribe_updates', to: 'municipalities#subscribe'
+
+  get '/rankings', to: 'pages#rankings', as: :rankings
+  get '/about', to: 'pages#about', as: :about
 end

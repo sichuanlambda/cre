@@ -295,7 +295,9 @@
     flex: 1;
     max-width: 600px;
     padding: 0 20px;
+    padding-right: 40px;
     align-self: flex-end;
+    margin-left: auto;
   }
 
   .rankings-container h2 {
@@ -441,9 +443,15 @@
   }
 
   .request-section {
-    flex: 0 0 300px;
+    flex: 0 0 500px;
     align-self: flex-end;
     padding: 10px 20px;
+  }
+
+  .request-section h2 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: #333;
   }
 
   .request-section .form-inputs {
@@ -460,14 +468,122 @@
       margin: 20px 0;
     }
   }
+
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 40px;
+  }
+
+  .logo {
+    flex: 0 0 200px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .logo img {
+    height: 40px;
+    width: auto;
+  }
+
+  .logo-text {
+    font-size: 1.4em;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .main-nav {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+  }
+
+  .nav-link {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+
+  .nav-link:hover {
+    background-color: #f0f4f8;
+  }
+
+  .header-subscribe {
+    flex: 0 0 300px;
+  }
+
+  .header-subscribe .form-container {
+    display: flex;
+    gap: 10px;
+  }
+
+  .header-subscribe .form-input {
+    height: 36px;
+    padding: 0 12px;
+  }
+
+  .header-subscribe .form-button {
+    height: 36px;
+    padding: 0 15px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1024px) {
+    .site-header {
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .header-subscribe {
+      width: 100%;
+      flex: none;
+    }
+  }
+
+  .request-section h1 {
+    font-size: 1.9em;
+    margin-bottom: 30px;
+    line-height: 1.5;        /* Increased from 1.3 to 1.5 for more space between lines */
+    color: #333;
+    letter-spacing: 0.01em;  /* Subtle spacing between characters */
+    word-spacing: 0.05em;    /* Subtle spacing between words */
+  }
 </style>
 
-<div class="page-header">
-  <h1>Municipality Council Tracker</h1>
-</div>
+<header class="site-header">
+  <div class="logo">
+    <%= image_tag "logo.png", alt: "Council Tracker Logo" %>
+    <span class="logo-text">City Council Tracker</span>
+  </div>
+  
+  <nav class="main-nav">
+    <%= link_to "Home", root_path, class: "nav-link" %>
+    <%= link_to "Municipalities", municipalities_path, class: "nav-link" %>
+    <%# We can add more links once the routes are defined %>
+  </nav>
+
+  <div class="header-subscribe">
+    <%= form_with url: subscribe_updates_path, method: :post, class: "form-container compact" do |f| %>
+      <%= f.email_field :email, 
+          placeholder: "Enter your email for updates...", 
+          class: "form-input" %>
+      <%= f.submit "Subscribe", class: "form-button secondary" %>
+    <% end %>
+  </div>
+</header>
 
 <div class="main-content-container">
   <div class="request-section">
+    <h1>Turning Publicly Available City Council & Municipal Information into Development Action</h1>
     <h2>Request New Municipality</h2>
     <%= form_with url: request_municipality_path, method: :post, class: "form-container" do |f| %>
       <div class="form-inputs">
@@ -513,16 +629,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="subscribe-section">
-    <h2>Get Updates</h2>
-    <%= form_with url: subscribe_updates_path, method: :post, class: "form-container compact" do |f| %>
-      <%= f.email_field :email, 
-          placeholder: "Enter your email for updates...", 
-          class: "form-input" %>
-      <%= f.submit "Subscribe", class: "form-button secondary" %>
-    <% end %>
   </div>
 </div>
 
