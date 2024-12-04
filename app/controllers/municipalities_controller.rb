@@ -1,5 +1,13 @@
 class MunicipalitiesController < ApplicationController
   def index
+    @municipalities = if params[:query].present?
+      Municipality.includes(:council_members, :development_score, :news_articles)
+                  .search(params[:query])
+    else
+      Municipality.includes(:council_members, :development_score, :news_articles)
+                  .all
+    end
+
     @top_municipalities = Municipality.includes(:development_score)
                                       .joins(:development_score)
                                       .order('development_scores.current_score DESC')
@@ -9,9 +17,6 @@ class MunicipalitiesController < ApplicationController
                                       .joins(:development_score)
                                          .order('development_scores.current_score ASC')
                                          .limit(5)
-
-    @municipalities = Municipality.includes(:council_members, :development_score, :news_articles)
-                                  .search(params[:query])
   end
 
   def show

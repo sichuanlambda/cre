@@ -23,7 +23,7 @@ class Municipality < ApplicationRecord
 
   def self.search(query)
     if query.present?
-      where("name ILIKE ?", "%#{query}%")
+      where("LOWER(name) LIKE ?", "%#{query.downcase}%")
     else
       all
     end
