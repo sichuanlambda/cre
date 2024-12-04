@@ -847,6 +847,31 @@
   </div>
 </div>
 
+
+<div class="coverage-section">
+  <h2>City Council Coverage</h2>
+  <div id="map" style="height: 500px;"></div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var map = L.map('map').setView([37.8, -96], 4); // Centered on the US
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    <% @municipalities.each do |municipality| %>
+      <% if municipality.latitude.present? && municipality.longitude.present? %>
+        L.marker([<%= municipality.latitude %>, <%= municipality.longitude %>])
+          .addTo(map)
+          .bindPopup('<%= municipality.name %>');
+      <% end %>
+    <% end %>
+  });
+</script>
+
 <%= turbo_frame_tag "results" do %>
   <div class="municipality-list">
     <% @municipalities.each do |municipality| %>
@@ -951,6 +976,7 @@
     <% end %>
   </div>
 <% end %>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

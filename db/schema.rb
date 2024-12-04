@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_12_02_214248) do
+ActiveRecord::Schema[7.1].define(version: 2024_12_04_135725) do
   create_table "council_members", force: :cascade do |t|
     t.string "name"
     t.string "position"
@@ -62,6 +62,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_12_02_214248) do
     t.string "name"
     t.string "state"
     t.string "country"
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
     t.index ["name"], name: "index_municipalities_on_name"
   end
 

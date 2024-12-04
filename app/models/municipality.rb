@@ -6,6 +6,13 @@ class Municipality < ApplicationRecord
 
   validates :name, presence: true, uniqueness: true
 
+  geocoded_by :full_address
+  after_validation :geocode, if: ->(obj) { obj.name_changed? || obj.state_changed? }
+
+  def full_address
+    [name, state, 'USA'].compact.join(', ')
+  end
+
   def next_election_date
     council_members.maximum(:next_election_date)
   end
