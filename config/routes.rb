@@ -18,4 +18,7 @@ Rails.application.routes.draw do
 
   get '/rankings', to: 'pages#rankings', as: :rankings
   get '/about', to: 'pages#about', as: :about
+
+  #zoning checker
+  get '/checker', to: 'zoning#checker'
 end

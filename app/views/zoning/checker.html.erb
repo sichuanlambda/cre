@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoning Designation Finder</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Find Zoning Designation</h1>
+        
+        <div class="form-container">
+            <%= form_tag('#', id: 'coordinatesForm', class: 'coordinates-form', onsubmit: 'return false;') do %>
+                <div class="form-group">
+                    <%= label_tag :latitude, 'Latitude:' %>
+                    <%= text_field_tag :latitude, nil, id: 'latitude', class: 'form-control', required: true %>
+                </div>
+
+                <div class="form-group">
+                    <%= label_tag :longitude, 'Longitude:' %>
+                    <%= text_field_tag :longitude, nil, id: 'longitude', class: 'form-control', required: true %>
+                </div>
+
+                <%= submit_tag 'Get Zoning Designation', class: 'btn btn-primary' %>
+            <% end %>
+        </div>
+
+        <div id="result" class="mt-4"></div>
+    </div>
+
+    <%= javascript_tag do %>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('coordinatesForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const latitude = document.getElementById('latitude').value;
+                const longitude = document.getElementById('longitude').value;
+                const resultDiv = document.getElementById('result');
+
+                // Show loading state
+                resultDiv.innerHTML = '<div class="loading">Loading...</div>';
+
+                fetch(`/zoning_checker?latitude=${latitude}&longitude=${longitude}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            resultDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                        } else {
+                            resultDiv.innerHTML = `
+                                <div class="alert alert-success">
+                                    <h4>Zoning Information:</h4>
+                                    <p>Designation: ${data.zoning || 'Not available'}</p>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        resultDiv.innerHTML = `
+                            <div class="alert alert-danger">
+                                Error fetching zoning data. Please try again.
+                            </div>
+                        `;
+                    });
+            });
+        });
+    <% end %>
+
+    <%= content_for :styles do %>
+        <style>
+            .coordinates-form {
+                max-width: 500px;
+                margin: 2rem 0;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .loading {
+                text-align: center;
+                padding: 1rem;
+                color: #666;
+            }
+        </style>
+    <% end %>
+</body>
+</html> 
