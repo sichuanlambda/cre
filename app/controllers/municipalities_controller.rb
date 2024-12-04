@@ -8,6 +8,8 @@ class MunicipalitiesController < ApplicationController
                   .all
     end
 
+    @map_municipalities = Municipality.all
+
     @top_municipalities = Municipality.includes(:development_score)
                                       .joins(:development_score)
                                       .order('development_scores.current_score DESC')

@@ -964,7 +964,10 @@
     
     <div class="search-container">
       <h3>Find Your Municipality</h3>
-      <%= form_with url: municipalities_path, method: :get, class: "search-form" do |f| %>
+      <%= form_with url: municipalities_path(anchor: 'search-results'), 
+                    method: :get, 
+                    class: "search-form", 
+                    data: { turbo: false } do |f| %>
         <%= f.text_field :query, 
             placeholder: "Search by city name...", 
             class: "search-input",
@@ -995,7 +998,7 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    <% @municipalities.each do |municipality| %>
+    <% @map_municipalities.each do |municipality| %>
       <% if municipality.latitude.present? && municipality.longitude.present? %>
         L.marker([<%= municipality.latitude %>, <%= municipality.longitude %>])
           .addTo(map)
