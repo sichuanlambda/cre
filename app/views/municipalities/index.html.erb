@@ -786,7 +786,7 @@
 
   .map-container {
     flex: 1;
-    min-height: 500px;
+    min-height: 420px;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -795,7 +795,7 @@
 
   #map {
     height: 100%;
-    min-height: 500px;
+    min-height: 300px;
   }
 
   .search-container {
@@ -956,7 +956,6 @@
 
 
 <div class="coverage-section">
-  <h2>City Council Coverage</h2>
   <div class="coverage-content">
     <div class="map-container">
       <div id="map"></div>
@@ -969,7 +968,7 @@
                     class: "search-form", 
                     data: { turbo: false } do |f| %>
         <%= f.text_field :query, 
-            placeholder: "Search by city name...", 
+            placeholder: "Search by city name or state...", 
             class: "search-input",
             value: params[:query] %>
         <%= f.submit "Search", class: "search-button" %>
