@@ -782,10 +782,13 @@
     display: flex;
     gap: 30px;
     margin-top: 20px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .map-container {
-    flex: 1;
+    flex: 0.7;
     min-height: 420px;
     background: #fff;
     border-radius: 12px;
@@ -799,7 +802,7 @@
   }
 
   .search-container {
-    flex: 1;
+    flex: 0.4;
     padding: 20px;
     background: #fff;
     border-radius: 12px;
@@ -878,6 +881,99 @@
     .search-container {
       width: 100%;
     }
+  }
+
+  .search-container {
+    flex: 0.4;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .featured-municipalities {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  .featured-municipalities h4 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+  }
+
+  .featured-item {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: background-color 0.2s;
+  }
+
+  .featured-item:hover {
+    background: #f0f4f8;
+  }
+
+  .featured-name {
+    font-weight: 500;
+    color: #2c5282;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .featured-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .featured-score {
+    color: #2ecc71;
+    font-weight: 500;
+  }
+
+  .sponsorship-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    text-align: center;
+  }
+
+  .sponsorship-section h4 {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .sponsor-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .sponsor-link:hover {
+    border-color: #e0e0e0;
+  }
+
+  .sponsor-logo {
+    max-width: 180px;
+    height: auto;
+    margin-bottom: 15px;
+  }
+
+  .sponsor-name {
+    color: #333;
+    font-size: 1.2em;
+    font-weight: 500;
   }
 </style>
 
@@ -982,6 +1078,14 @@
               <span class="state-label"><%= municipality.state %></span>
             </div>
           <% end %>
+        <% else %>
+          <div class="sponsorship-section">
+            <h4>Made Available By</h4>
+            <a href="https://plotzy.ai" target="_blank" class="sponsor-link">
+              <%= image_tag "plotzy-logo.jpg", alt: "Plotzy.ai Logo", class: "sponsor-logo" %>
+              <span class="sponsor-name">Plotzy.ai</span>
+            </a>
+          </div>
         <% end %>
       </div>
     </div>
