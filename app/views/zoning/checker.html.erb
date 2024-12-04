@@ -12,13 +12,8 @@
         <div class="form-container">
             <%= form_tag('#', id: 'coordinatesForm', class: 'coordinates-form', onsubmit: 'return false;') do %>
                 <div class="form-group">
-                    <%= label_tag :latitude, 'Latitude:' %>
-                    <%= text_field_tag :latitude, nil, id: 'latitude', class: 'form-control', required: true %>
-                </div>
-
-                <div class="form-group">
-                    <%= label_tag :longitude, 'Longitude:' %>
-                    <%= text_field_tag :longitude, nil, id: 'longitude', class: 'form-control', required: true %>
+                    <%= label_tag :coordinates, 'Coordinates (lat, lng):' %>
+                    <%= text_field_tag :coordinates, nil, id: 'coordinates', class: 'form-control', placeholder: 'e.g., 35.48473329386258, -97.48899808927506', required: true %>
                 </div>
 
                 <%= submit_tag 'Get Zoning Designation', class: 'btn btn-primary' %>
@@ -33,14 +28,21 @@
             document.getElementById('coordinatesForm').addEventListener('submit', function(event) {
                 event.preventDefault();
 
-                const latitude = document.getElementById('latitude').value;
-                const longitude = document.getElementById('longitude').value;
+                const coordinatesInput = document.getElementById('coordinates').value;
                 const resultDiv = document.getElementById('result');
+
+                // Parse the coordinates
+                const [latitude, longitude] = coordinatesInput.split(',').map(coord => coord.trim());
+
+                if (!latitude || !longitude) {
+                    resultDiv.innerHTML = '<div class="alert alert-danger">Please enter valid coordinates.</div>';
+                    return;
+                }
 
                 // Show loading state
                 resultDiv.innerHTML = '<div class="loading">Loading...</div>';
 
-                fetch(`/zoning_checker?latitude=${latitude}&longitude=${longitude}`)
+                fetch(`/checker?latitude=${latitude}&longitude=${longitude}`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok');
