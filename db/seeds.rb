@@ -105,12 +105,25 @@ municipalities.each do |muni_data|
       # Add news articles if none exist
       if !municipality.news_articles.exists? && data["news_articles"].present?
         puts "Saving news articles..."
+        relevant_topics = [
+          'rezoning', 'zoning', 'city council', 'council vote', 'council election',
+          'urban development', 'comprehensive plan', 'real estate development',
+          'housing development', 'land use', 'planning commission',
+          'building permits', 'property development', 'municipal development',
+          'affordable housing', 'mixed-use development'
+        ]
+
         data["news_articles"].each do |article_data|
           begin
-            municipality.news_articles.find_or_create_by!(url: article_data[:url]) do |article|
-              article.title = article_data[:title]
-              article.description = article_data[:description]
-              article.published_at = article_data[:published_at] || Time.current
+            # Only create articles that match our relevant topics
+            if relevant_topics.any? { |topic|
+              (article_data[:title].to_s.downcase + article_data[:description].to_s.downcase).include?(topic)
+            }
+              municipality.news_articles.find_or_create_by!(url: article_data[:url]) do |article|
+                article.title = article_data[:title]
+                article.description = article_data[:description]
+                article.published_at = article_data[:published_at] || Time.current
+              end
             end
           rescue ActiveRecord::RecordInvalid => e
             puts "Skipping invalid article for #{municipality.name}: #{e.message}"

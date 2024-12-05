@@ -3,6 +3,8 @@ class Municipality < ApplicationRecord
   has_many :news_articles, dependent: :destroy
   has_one :development_score, dependent: :destroy
   has_many :municipal_resources
+  has_many :development_projects, dependent: :destroy
+  has_many :zoning_records, dependent: :destroy
 
   validates :name, presence: true, uniqueness: true
 
@@ -48,5 +50,29 @@ class Municipality < ApplicationRecord
     else
       all
     end
+  end
+
+  def active_projects
+    development_projects.where(status: ['approved', 'in_progress'])
+  end
+
+  def upcoming_projects
+    development_projects.where(status: 'proposed')
+  end
+
+  def rezoning_requests
+    zoning_records.where(record_type: 'rezoning_request')
+  end
+
+  def development_incentives
+    zoning_records.where(record_type: 'incentive')
+  end
+
+  def impact_fees
+    zoning_records.where(record_type: 'impact_fee')
+  end
+
+  def zoning_maps
+    zoning_records.where(record_type: 'map')
   end
 end

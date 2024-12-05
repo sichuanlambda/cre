@@ -5,11 +5,14 @@ class MunicipalityDataService
       "reelection_dates" => fetch_reelection_dates(municipality),
       "development_score" => calculate_development_score(municipality),
       "news_articles" => fetch_news_articles(municipality),
-      "municipal_resources" => fetch_municipal_resources(municipality)
+      "municipal_resources" => fetch_municipal_resources(municipality),
+      "development_projects" => fetch_development_projects(municipality),
+      "zoning_records" => fetch_zoning_records(municipality)
     }
 
     save_news_articles(municipality, data["news_articles"])
     save_municipal_resources(municipality, data["municipal_resources"])
+    save_development_data(municipality, data)
     data
   end
 
@@ -134,22 +137,21 @@ class MunicipalityDataService
     news_api = News.new(ENV['NEWS_API_KEY'])
     articles = news_api.get_everything(
       q: "(" \
-         "\"zoning change\" OR \"development project\" OR \"building permit\" OR " \
-         "\"housing development\" OR \"commercial development\" OR \"urban planning\" OR " \
-         "\"city planning\" OR \"property development\" OR \"construction project\" OR " \
-         "\"neighborhood opposition\" OR \"community feedback\" OR \"public hearing\"" \
+         "\"zoning\" OR \"city council\" OR " \
+         "\"housing development\" OR \"planning commission\"" \
          ") AND " \
-         "(\"#{municipality.name}\") AND " \
-         "(\"city council\" OR \"planning commission\" OR \"zoning board\" OR municipal OR mayor)",
+         "\"#{municipality.name}\" AND council",
       language: 'en',
       sortBy: 'publishedAt',
-      pageSize: 5
+      pageSize: 10
     )
 
     articles.map do |article|
       {
         title: article.title,
-        url: article.url
+        url: article.url,
+        description: article.description,
+        published_at: article.publishedAt
       }
     end
   rescue => e
@@ -192,13 +194,28 @@ class MunicipalityDataService
 
       social_patterns.each do |platform, pattern|
         if href =~ pattern
-          social_links[platform] = href
+          if platform == "linkedin"
+            # Check if LinkedIn URL is valid
+            begin
+              response = HTTParty.get(href, follow_redirects: true)
+              if response.code == 200
+                social_links[platform] = href
+              else
+                social_links["unverified_linkedin"] = href
+              end
+            rescue => e
+              Rails.logger.error "Error verifying LinkedIn URL #{href}: #{e.message}"
+              social_links["unverified_linkedin"] = href
+            end
+          else
+            social_links[platform] = href
+          end
         end
       end
 
       if href =~ /(?:social|profile)/ || href.include?('://')
         social_links["other"] ||= []
-        social_links["other"] << href unless social_links["other"].include?(href) # Prevent duplicates
+        social_links["other"] << href unless social_links["other"].include?(href)
       end
     end
 
@@ -452,6 +469,100 @@ class MunicipalityDataService
           r.last_updated = resource["last_updated"]
         end
       end
+    end
+  end
+
+  def self.fetch_development_projects(municipality)
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a municipal development expert. Return only valid JSON for development projects. Format: array of objects with fields: name, project_type (residential/commercial/industrial/mixed-use), status (proposed/approved/in_progress/completed), description, estimated_completion (YYYY-MM-DD), estimated_cost, developer_name, project_url."
+          },
+          {
+            role: "user",
+            content: "Find current development projects for #{municipality.name}, #{municipality.state}. Include both upcoming and active projects."
+          }
+        ]
+      }
+    )
+
+    parse_development_projects_response(response) || []
+  end
+
+  def self.fetch_zoning_records(municipality)
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a zoning expert. Return only valid JSON for zoning records. Include zoning maps, rezoning requests, development incentives, and impact fees. Format: array of objects with fields: record_type (map/rezoning_request/incentive/impact_fee), title, description, status, effective_date (YYYY-MM-DD), url, details (object with type-specific information)."
+          },
+          {
+            role: "user",
+            content: "Find zoning records, incentives, and fees for #{municipality.name}, #{municipality.state}."
+          }
+        ]
+      }
+    )
+
+    parse_zoning_records_response(response) || []
+  end
+
+  def self.save_development_data(municipality, data)
+    if data["development_projects"].present?
+      data["development_projects"].each do |project|
+        municipality.development_projects.find_or_create_by!(name: project["name"]) do |p|
+          p.project_type = project["project_type"]
+          p.status = project["status"]
+          p.description = project["description"]
+          p.estimated_completion = project["estimated_completion"]
+          p.estimated_cost = project["estimated_cost"]
+          p.developer_name = project["developer_name"]
+          p.project_url = project["project_url"]
+          p.details = project["details"] || {}
+        end
+      end
+    end
+
+    if data["zoning_records"].present?
+      data["zoning_records"].each do |record|
+        municipality.zoning_records.find_or_create_by!(
+          record_type: record["record_type"],
+          title: record["title"]
+        ) do |r|
+          r.description = record["description"]
+          r.status = record["status"]
+          r.effective_date = record["effective_date"]
+          r.url = record["url"]
+          r.details = record["details"] || {}
+        end
+      end
+    end
+  end
+
+  def self.parse_development_projects_response(response)
+    return nil unless response['choices']&.first&.dig('message', 'content')
+
+    begin
+      JSON.parse(response['choices'].first['message']['content'])
+    rescue JSON::ParserError => e
+      Rails.logger.error "Failed to parse development projects response: #{e.message}"
+      []
+    end
+  end
+
+  def self.parse_zoning_records_response(response)
+    return nil unless response['choices']&.first&.dig('message', 'content')
+
+    begin
+      JSON.parse(response['choices'].first['message']['content'])
+    rescue JSON::ParserError => e
+      Rails.logger.error "Failed to parse zoning records response: #{e.message}"
+      []
     end
   end
 end
