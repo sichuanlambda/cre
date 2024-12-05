@@ -1024,6 +1024,17 @@
     gap: 40px;
     margin-bottom: 20px;
   }
+
+  .municipality-card h2 .municipality-link {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .municipality-card h2 .municipality-link:hover {
+    color: #2c5282;
+    text-decoration: underline;
+  }
 </style>
 
 <header class="site-header">
@@ -1127,7 +1138,7 @@
         <% if params[:query].present? %>
           <% @municipalities.each do |municipality| %>
             <div class="municipality-result">
-              <%= link_to municipality.name, "#", class: "municipality-link" %>
+              <%= link_to municipality.name, municipality_path(municipality), class: "municipality-link" %>
               <span class="state-label"><%= municipality.state %></span>
             </div>
           <% end %>
@@ -1168,7 +1179,7 @@
   <div class="municipality-list">
     <% @municipalities.each do |municipality| %>
       <div class="municipality-card">
-        <h2><%= municipality.name %></h2>
+        <h2><%= link_to municipality.name, municipality_path(municipality), class: "municipality-link" %></h2>
         
         <div class="development-score">
           <div class="score"><%= municipality.development_friendliness_rating %></div>

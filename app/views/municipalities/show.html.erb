@@ -1,0 +1,522 @@
+<style>
+  /* Base Layout */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .development-score-badge {
+    background: #EBF5FF;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+    min-width: 150px;
+  }
+
+  .development-score-badge .score {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #2563EB;
+    line-height: 1;
+  }
+
+  /* Council Members Section */
+  .council-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .council-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+
+  .council-member-card {
+    background: #F9FAFB;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .council-member-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Projects Section */
+  .projects-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .project-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+  }
+
+  .project-card.active {
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+  }
+
+  .project-card.upcoming {
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+  }
+
+  /* News Section */
+  .news-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .news-article {
+    padding: 1rem 0;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .news-article:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .news-article-title {
+    color: #2563EB;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .news-article-title:hover {
+    color: #1D4ED8;
+  }
+
+  /* Rating Colors */
+  .rating-description {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .rating-description.very-friendly { color: #059669; }
+  .rating-description.friendly { color: #10B981; }
+  .rating-description.moderate { color: #D97706; }
+  .rating-description.less-friendly { color: #F59E0B; }
+  .rating-description.needs-improvement { color: #DC2626; }
+
+  /* Social Links */
+  .social-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .social-link {
+    color: #6B7280;
+    transition: color 0.2s;
+  }
+
+  .social-link:hover {
+    color: #2563EB;
+  }
+
+  .social-link.twitter:hover { color: #1DA1F2; }
+  .social-link.linkedin:hover { color: #0A66C2; }
+  .social-link.facebook:hover { color: #1877F2; }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .container {
+      padding: 1rem;
+    }
+    
+    .council-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-section {
+      flex-direction: column;
+    }
+    
+    .development-score-badge {
+      margin-top: 1rem;
+    }
+  }
+
+  /* Utility Classes */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .two-column-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .two-column-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Layout Improvements */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+  }
+
+  /* Hero Section Enhancements */
+  .hero-wrapper {
+    background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 3rem;
+  }
+
+  .hero-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .city-info h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .city-meta {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  /* Stats Cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-card .label {
+    font-size: 0.875rem;
+    color: #6B7280;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-card .value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1F2937;
+  }
+
+  /* Development Score Enhancement */
+  .development-score-badge {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  .development-score-badge .score {
+    color: white;
+  }
+
+  /* Section Cards */
+  .section-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .section-card h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #F3F4F6;
+  }
+
+  /* Timeline for Projects */
+  .project-timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .project-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #E5E7EB;
+  }
+
+  .project-card {
+    position: relative;
+  }
+
+  .project-card::before {
+    content: '';
+    position: absolute;
+    left: -2rem;
+    top: 1rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: #2563EB;
+    border: 3px solid white;
+  }
+
+  /* Council Member Cards Enhancement */
+  .council-member-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .member-avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #6B7280;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 1024px) {
+    .main-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .hero-content {
+      flex-direction: column;
+      gap: 2rem;
+    }
+    
+    .development-score-badge {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="hero-wrapper">
+  <div class="container">
+    <div class="hero-content">
+      <div class="city-info">
+        <h1><%= @municipality.name %></h1>
+        <h2 class="text-xl opacity-75"><%= @municipality.state %></h2>
+        <div class="city-meta">
+          <div>
+            <i class="fas fa-calendar"></i>
+            Tracking since <%= @municipality.created_at.strftime("%B %Y") %>
+          </div>
+          <% if @municipality.next_election_date %>
+            <div>
+              <i class="fas fa-vote-yea"></i>
+              Next Election: <%= @municipality.next_election_date.strftime("%B %Y") %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      <div class="development-score-badge">
+        <div class="score"><%= @municipality.development_friendliness_rating %></div>
+        <div class="label">Development Score</div>
+        <div class="rating-description">
+          <%= case @municipality.development_friendliness_rating
+              when 80..100 then "Very Development Friendly"
+              when 60..79 then "Development Friendly"
+              when 40..59 then "Moderately Friendly"
+              when 20..39 then "Less Development Friendly"
+              else "Needs Improvement"
+              end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Active Projects</div>
+      <div class="value"><%= @active_projects.count %></div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Council Members</div>
+      <div class="value"><%= @council_members.count %></div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Recent Updates</div>
+      <div class="value"><%= @news_articles.count %></div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="main-content">
+      <%# Development Projects Section %>
+      <div class="section-card">
+        <h2>Development Projects</h2>
+        <div class="project-timeline">
+          <% @active_projects.each do |project| %>
+            <div class="project-card active">
+              <h3 class="text-xl font-semibold"><%= project.name %></h3>
+              <div class="text-sm text-gray-600 mb-2">
+                <%= project.project_type&.titleize %> • 
+                <% if project.estimated_completion %>
+                  Est. Completion: <%= project.estimated_completion.strftime("%B %Y") %>
+                <% end %>
+              </div>
+              <p class="text-gray-700"><%= project.description %></p>
+              <% if project.project_url %>
+                <%= link_to "View Details →", project.project_url, 
+                    class: "inline-block mt-2 text-blue-600 hover:text-blue-800", 
+                    target: "_blank" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Council Members Section %>
+      <div class="section-card">
+        <h2>City Council</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <% @council_members.each do |member| %>
+            <div class="council-member-card">
+              <div class="member-avatar">
+                <%= member.name.first %>
+              </div>
+              <div>
+                <h3 class="font-semibold"><%= member.name %></h3>
+                <p class="text-sm text-gray-600"><%= member.position %></p>
+                <% if member.social_links.present? %>
+                  <div class="social-links">
+                    <% member.social_links.each do |platform, url| %>
+                      <%= link_to url, class: "social-link #{platform}", target: "_blank" do %>
+                        <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
+                      <% end %>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <%# News Section %>
+      <div class="section-card">
+        <h2>Recent Updates</h2>
+        <div class="space-y-4">
+          <% @news_articles.each do |article| %>
+            <div class="news-article">
+              <h3 class="font-medium">
+                <%= link_to article.title, article.url, 
+                    class: "news-article-title", 
+                    target: "_blank" %>
+              </h3>
+              <p class="text-sm text-gray-500 my-1">
+                <%= article.published_at&.strftime("%B %d, %Y") %>
+              </p>
+              <p class="text-sm text-gray-600">
+                <%= truncate(article.description, length: 120) %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Zoning Information %>
+      <div class="section-card">
+        <h2>Zoning & Development</h2>
+        <% if @zoning_maps.any? %>
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Zoning Maps</h3>
+            <div class="space-y-2">
+              <% @zoning_maps.each do |map| %>
+                <div class="p-3 bg-gray-50 rounded-lg">
+                  <%= link_to map.url, class: "flex items-center", target: "_blank" do %>
+                    <i class="fas fa-map-marked-alt text-blue-600 mr-2"></i>
+                    <span><%= map.title %></span>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if @development_incentives.any? %>
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Development Incentives</h3>
+            <div class="space-y-2">
+              <% @development_incentives.each do |incentive| %>
+                <div class="p-3 bg-green-50 rounded-lg">
+                  <h4 class="font-medium"><%= incentive.title %></h4>
+                  <p class="text-sm text-gray-600 mt-1"><%= incentive.description %></p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

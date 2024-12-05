@@ -7,11 +7,7 @@ Rails.application.routes.draw do
   #municipalities
   root 'municipalities#index'
 
-  resources :municipalities do
-    collection do
-      get :search
-    end
-  end
+  resources :municipalities, only: [:index, :show]
 
   post '/request_municipality', to: 'municipalities#request_new'
   post '/subscribe_updates', to: 'municipalities#subscribe'

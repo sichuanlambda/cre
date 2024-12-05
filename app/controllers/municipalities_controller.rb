@@ -1,29 +1,33 @@
 class MunicipalitiesController < ApplicationController
   def index
-    @municipalities = if params[:query].present?
-      Municipality.includes(:council_members, :development_score, :news_articles)
-                  .search(params[:query])
-    else
-      Municipality.includes(:council_members, :development_score, :news_articles)
-                  .all
-    end
+    @municipalities = Municipality.all.order(:name)
 
-    @map_municipalities = Municipality.all
+    # Get municipalities with development scores
+    municipalities_with_scores = Municipality.joins(:development_score)
+                                          .select('municipalities.*, development_scores.current_score')
+                                          .order('development_scores.current_score DESC')
 
-    @top_municipalities = Municipality.includes(:development_score)
-                                      .joins(:development_score)
-                                      .order('development_scores.current_score DESC')
-                                      .limit(5)
+    # Top municipalities by development score
+    @top_municipalities = municipalities_with_scores.first(6)
 
-    @bottom_municipalities = Municipality.includes(:development_score)
-                                      .joins(:development_score)
-                                         .order('development_scores.current_score ASC')
-                                         .limit(5)
+    # Bottom municipalities by development score
+    @bottom_municipalities = municipalities_with_scores.last(6).reverse
+
+    # Map municipalities (those with lat/long coordinates)
+    @map_municipalities = Municipality.where.not(latitude: nil, longitude: nil)
   end
 
   def show
-    @municipality = Municipality.includes(:council_members, :development_score, :news_articles)
-                                .find(params[:id])
+    @municipality = Municipality.find(params[:id])
+    @council_members = @municipality.council_members
+    @development_score = @municipality.development_score
+    @active_projects = @municipality.active_projects
+    @upcoming_projects = @municipality.upcoming_projects
+    @news_articles = @municipality.news_articles.order(published_at: :desc)
+    @rezoning_requests = @municipality.rezoning_requests
+    @development_incentives = @municipality.development_incentives
+    @impact_fees = @municipality.impact_fees
+    @zoning_maps = @municipality.zoning_maps
   end
 
   def search
