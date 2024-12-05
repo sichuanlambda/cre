@@ -1179,7 +1179,13 @@
   <div class="municipality-list">
     <% @municipalities.each do |municipality| %>
       <div class="municipality-card">
-        <h2><%= link_to municipality.name, municipality_path(municipality), class: "municipality-link" %></h2>
+        <h2>
+          <%= link_to municipality_path(municipality), 
+              class: "municipality-link",
+              data: { turbo_frame: "_top" } do %>
+            <%= municipality.name %>
+          <% end %>
+        </h2>
         
         <div class="development-score">
           <div class="score"><%= municipality.development_friendliness_rating %></div>
