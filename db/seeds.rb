@@ -216,4 +216,54 @@ municipalities_data.each do |data|
   end
 end
 
+CITY_IMAGES = {
+  'Albuquerque' => 'https://images.pexels.com/photos/794641/pexels-photo-794641.jpeg?',
+  'Atlanta' => 'https://images.pexels.com/photos/2815184/pexels-photo-2815184.jpeg',
+  'Austin' => 'https://images.unsplash.com/photo-1588993608283-7f0eda4438be?q=80&w=2970&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Bakersfield' => 'https://images.pexels.com/photos/3751013/pexels-photo-3751013.jpeg', #fix
+  'Berkeley' => 'https://images.unsplash.com/photo-1671709363686-a7899fb1238e?q=80&w=2970&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Boise' => 'https://images.unsplash.com/photo-1465244554671-e501f19a3bb3?q=80&w=2970&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Boston' => 'https://plus.unsplash.com/premium_photo-1694475423949-9685bb4fa0bc?q=80&w=2970&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Charlotte' => 'https://plus.unsplash.com/premium_photo-1682804225008-4cd4542e91d5?q=80&w=3175&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Chicago' => 'https://images.unsplash.com/photo-1467226632440-65f0b4957563?q=80&w=2887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Cleveland' => 'https://images.pexels.com/photos/3751017/pexels-photo-3751017.jpeg', #fix
+  'Columbus' => 'https://images.unsplash.com/photo-1568652463208-f8fe991eb6b9?q=80&w=3174&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Dallas' => 'https://plus.unsplash.com/premium_photo-1697729753410-667607f7afd4?q=80&w=3132&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Denver' => 'https://images.pexels.com/photos/9376507/pexels-photo-9376507.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'Detroit' => 'https://images.pexels.com/photos/702343/pexels-photo-702343.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'Flint' => 'https://images.pexels.com/photos/3751021/pexels-photo-3751021.jpeg',
+  'Honolulu' => 'https://images.unsplash.com/photo-1684727906248-b36353278801?q=80&w=2960&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Houston' => 'https://plus.unsplash.com/premium_photo-1694475099470-b12dc8ce0798?q=80&w=2972&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Kansas City' => 'https://plus.unsplash.com/premium_photo-1697729864667-57f5f29e946b?q=80&w=2970&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Los Angeles' => 'https://plus.unsplash.com/premium_photo-1725408106567-a77bd9beff7c?q=80&w=2970&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Memphis' => 'https://images.pexels.com/photos/3751025/pexels-photo-3751025.jpeg',#fix
+  'Miami' => 'https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?q=80&w=3000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Minneapolis' => 'https://plus.unsplash.com/premium_photo-1670176446913-ca025ebaf172?q=80&w=2969&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Nashville' => 'https://images.unsplash.com/photo-1556033681-83abea291a96?q=80&w=3064&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'New Orleans' => 'https://images.unsplash.com/photo-1640583430339-f83d93e77413?q=80&w=3002&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'New York City' => 'https://images.unsplash.com/photo-1700730287621-452087138d73?q=80&w=2970&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Oakland' => 'https://images.pexels.com/photos/3751029/pexels-photo-3751029.jpeg', #fix
+  'Oklahoma City' => 'https://images.unsplash.com/photo-1519876217051-4449feb0b589?q=80&w=2912&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Phoenix' => 'https://images.pexels.com/photos/3751031/pexels-photo-3751031.jpeg', #fix
+  'Plano' => 'https://images.pexels.com/photos/3751032/pexels-photo-3751032.jpeg', #fix
+  'Portland' => 'https://images.pexels.com/photos/432361/pexels-photo-432361.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'Raleigh' => 'https://images.pexels.com/photos/29467679/pexels-photo-29467679/free-photo-of-aerial-view-of-raleigh-skyline-with-rail-lines.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'Richmond' => 'https://images.unsplash.com/photo-1631584085080-5dbd19558feb?q=80&w=2970&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'Sacramento' => 'https://images.pexels.com/photos/29583198/pexels-photo-29583198/free-photo-of-sacramento-cityscape-featuring-cathedral-of-the-blessed-sacrament.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'Salt Lake City' => 'https://images.pexels.com/photos/3751036/pexels-photo-3751036.jpeg', #fix
+  'San Diego' => 'https://images.pexels.com/photos/2157685/pexels-photo-2157685.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'San Francisco' => 'https://images.pexels.com/photos/3584437/pexels-photo-3584437.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'Seattle' => 'https://images.pexels.com/photos/3964406/pexels-photo-3964406.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'Spokane' => 'https://images.pexels.com/photos/9229457/pexels-photo-9229457.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  'Springfield' => 'https://images.pexels.com/photos/3751039/pexels-photo-3751039.jpeg',
+  'St. Paul' => 'https://images.pexels.com/photos/3751040/pexels-photo-3751040.jpeg',
+  'Washington' => 'https://images.pexels.com/photos/208686/pexels-photo-208686.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+}
+
+# Update municipalities with images
+CITY_IMAGES.each do |city, image_url|
+  municipality = Municipality.find_by(name: city)
+  municipality&.update(image_url: image_url)
+end
+
 puts "Seed completed!"
