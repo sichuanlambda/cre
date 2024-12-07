@@ -194,16 +194,25 @@
 
   /* Hero Section Enhancements */
   .hero-wrapper {
-    background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+    background: <%= @municipality.image_url.present? ? 
+      "linear-gradient(rgba(37, 99, 235, 0.8), rgba(30, 64, 175, 0.8)), url('#{@municipality.image_url}')" : 
+      "linear-gradient(rgba(37, 99, 235, 1), rgba(30, 64, 175, 1))" %>;
+    background-size: <%= @municipality.image_url.present? ? "110% auto" : "100% 100%" %>;
+    background-position: center;
     color: white;
     padding: 3rem 0;
     margin-bottom: 3rem;
+    position: relative;
+    transition: background-size 10s ease;
+  }
+
+  .hero-wrapper:hover {
+    background-size: <%= @municipality.image_url.present? ? "100% auto" : "100% 100%" %>;
   }
 
   .hero-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    position: relative;
+    z-index: 2;
   }
 
   .city-info h1 {

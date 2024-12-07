@@ -4,19 +4,49 @@
     flex-wrap: wrap;
     gap: 20px;
     padding: 20px;
+    justify-content: center;
   }
 
   .municipality-card {
-    background: #f0f4f8;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    flex: 1 1 calc(33.333% - 40px);
-    min-width: 300px;
-    max-width: calc(50% - 40px);
-    display: flex;
-    flex-direction: column;
     position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    width: 400px;
+    flex: 0 0 400px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .municipality-card-image {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+  }
+
+  .municipality-card-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.6));
+    z-index: 1;
+  }
+
+  .municipality-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .municipality-card:hover .municipality-card-image img {
+    transform: scale(1.05);
+  }
+
+  .municipality-card-content {
+    padding: 1.5rem;
   }
 
   .municipality-details {
@@ -1035,6 +1065,27 @@
     color: #2c5282;
     text-decoration: underline;
   }
+
+  .municipality-card-header {
+    background: linear-gradient(rgba(37, 99, 235, 1), rgba(30, 64, 175, 1));
+    padding: 2rem;
+    color: white;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .municipality-name {
+    text-align: center;
+  }
+
+  .municipality-name h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .municipality-name p {
+    opacity: 0.8;
+  }
 </style>
 
 <header class="site-header">
@@ -1179,107 +1230,121 @@
   <div class="municipality-list">
     <% @municipalities.each do |municipality| %>
       <div class="municipality-card">
-        <h2>
-          <%= link_to municipality_path(municipality), 
-              class: "municipality-link",
-              data: { turbo_frame: "_top" } do %>
-            <%= municipality.name %>
-          <% end %>
-        </h2>
-        
-        <div class="development-score">
-          <div class="score"><%= municipality.development_friendliness_rating %></div>
-          <h3>Development Score</h3>
-          <p class="rating-description"><%= 
-            case municipality.development_friendliness_rating
-            when 80..100 then "Very Friendly"
-            when 60..79 then "Friendly"
-            when 40..59 then "Somewhat Friendly"
-            when 20..39 then "Less Friendly"
-            else "Needs Improvement"
-            end
-          %></p>
-        </div>
-
-        <div class="municipality-details">
-          <div class="news-articles">
-            <div class="section-header">
-              <h3>Recent News</h3>
+        <% if municipality.image_url.present? %>
+          <div class="municipality-card-image">
+            <%= image_tag(municipality.image_url, alt: "#{municipality.name} skyline") %>
+          </div>
+        <% else %>
+          <div class="municipality-card-header">
+            <div class="municipality-name">
+              <h2><%= municipality.name %></h2>
+              <p><%= municipality.state %></p>
             </div>
-            <% if municipality.news_articles.any? %>
+          </div>
+        <% end %>
+        <div class="municipality-card-content">
+          <h2>
+            <%= link_to municipality_path(municipality), 
+                class: "municipality-link",
+                data: { turbo_frame: "_top" } do %>
+              <%= municipality.name %>
+            <% end %>
+          </h2>
+          
+          <div class="development-score">
+            <div class="score"><%= municipality.development_friendliness_rating %></div>
+            <h3>Development Score</h3>
+            <p class="rating-description"><%= 
+              case municipality.development_friendliness_rating
+              when 80..100 then "Very Friendly"
+              when 60..79 then "Friendly"
+              when 40..59 then "Somewhat Friendly"
+              when 20..39 then "Less Friendly"
+              else "Needs Improvement"
+              end
+            %></p>
+          </div>
+
+          <div class="municipality-details">
+            <div class="news-articles">
+              <div class="section-header">
+                <h3>Recent News</h3>
+              </div>
+              <% if municipality.news_articles.any? %>
+                <ul>
+                  <% municipality.news_articles.limit(3).each do |article| %>
+                    <li>
+                      <%= link_to article.title, article.url, target: "_blank" %>
+                      <p class="article-date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
+                      <p class="article-description"><%= truncate(article.description, length: 150) %></p>
+                    </li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p>No recent news available</p>
+              <% end %>
+            </div>
+
+            <div class="council-members">
+              <div class="section-header">
+                <h3>Council Members</h3>
+                <div class="election-info">
+                  <% if municipality.next_election_date %>
+                    <p><strong>Next Election:</strong> <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
+                  <% else %>
+                    <p><strong>Next Election:</strong> Not scheduled</p>
+                  <% end %>
+                </div>
+              </div>
               <ul>
-                <% municipality.news_articles.limit(3).each do |article| %>
+                <% municipality.council_members.each do |member| %>
                   <li>
-                    <%= link_to article.title, article.url, target: "_blank" %>
-                    <p class="article-date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
-                    <p class="article-description"><%= truncate(article.description, length: 150) %></p>
+                    <strong><%= member.name %></strong> <%= member.position %>
+                    <% if member.social_links.present? %>
+                      <div class="social-links">
+                        <% member.social_links.each do |platform, url| %>
+                          <%= link_to url, class: "social-link #{platform}", target: "_blank", title: platform.to_s.titleize do %>
+                            <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    <% end %>
                   </li>
                 <% end %>
               </ul>
-            <% else %>
-              <p>No recent news available</p>
-            <% end %>
+            </div>
           </div>
 
-          <div class="council-members">
+          <div class="municipal-resources-section">
             <div class="section-header">
-              <h3>Council Members</h3>
-              <div class="election-info">
-                <% if municipality.next_election_date %>
-                  <p><strong>Next Election:</strong> <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
-                <% else %>
-                  <p><strong>Next Election:</strong> Not scheduled</p>
+              <h3>Municipal Resources</h3>
+            </div>
+            <% if municipality.municipal_resources.any? %>
+              <div class="resources-columns">
+                <% municipality.municipal_resources.group_by(&:category).each_slice(2) do |category_pair| %>
+                  <div class="resources-column">
+                    <% category_pair.each do |category, resources| %>
+                      <div class="resource-group">
+                        <h4 class="resource-category-title"><%= category.titleize %></h4>
+                        <ul class="resources-list">
+                          <% resources.take(3).each do |resource| %>
+                            <li>
+                              <%= link_to resource.title, resource.url, target: "_blank" %>
+                              <% if resource.last_updated %>
+                                <span class="resource-date">Updated: <%= resource.last_updated.strftime("%B %d, %Y") %></span>
+                              <% end %>
+                            </li>
+                          <% end %>
+                        </ul>
+                      </div>
+                    <% end %>
+                  </div>
                 <% end %>
               </div>
-            </div>
-            <ul>
-              <% municipality.council_members.each do |member| %>
-                <li>
-                  <strong><%= member.name %></strong> <%= member.position %>
-                  <% if member.social_links.present? %>
-                    <div class="social-links">
-                      <% member.social_links.each do |platform, url| %>
-                        <%= link_to url, class: "social-link #{platform}", target: "_blank", title: platform.to_s.titleize do %>
-                          <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
-                        <% end %>
-                      <% end %>
-                    </div>
-                  <% end %>
-                </li>
-              <% end %>
-            </ul>
+            <% else %>
+              <p>No resources available</p>
+            <% end %>
           </div>
-        </div>
-
-        <div class="municipal-resources-section">
-          <div class="section-header">
-            <h3>Municipal Resources</h3>
-          </div>
-          <% if municipality.municipal_resources.any? %>
-            <div class="resources-columns">
-              <% municipality.municipal_resources.group_by(&:category).each_slice(2) do |category_pair| %>
-                <div class="resources-column">
-                  <% category_pair.each do |category, resources| %>
-                    <div class="resource-group">
-                      <h4 class="resource-category-title"><%= category.titleize %></h4>
-                      <ul class="resources-list">
-                        <% resources.take(3).each do |resource| %>
-                          <li>
-                            <%= link_to resource.title, resource.url, target: "_blank" %>
-                            <% if resource.last_updated %>
-                              <span class="resource-date">Updated: <%= resource.last_updated.strftime("%B %d, %Y") %></span>
-                            <% end %>
-                          </li>
-                        <% end %>
-                      </ul>
-                    </div>
-                  <% end %>
-                </div>
-              <% end %>
-            </div>
-          <% else %>
-            <p>No resources available</p>
-          <% end %>
         </div>
       </div>
     <% end %>

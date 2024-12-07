@@ -7,12 +7,17 @@ class MunicipalityDataService
       "news_articles" => fetch_news_articles(municipality),
       "municipal_resources" => fetch_municipal_resources(municipality),
       "development_projects" => fetch_development_projects(municipality),
-      "zoning_records" => fetch_zoning_records(municipality)
+      "zoning_code" => fetch_zoning_code(municipality),
+      "zoning_maps" => fetch_zoning_maps(municipality),
+      "zoning_decisions" => fetch_zoning_decisions(municipality)
     }
 
     save_news_articles(municipality, data["news_articles"])
     save_municipal_resources(municipality, data["municipal_resources"])
     save_development_data(municipality, data)
+    save_zoning_data(municipality, data)
+    fetch_and_attach_image(municipality)
+
     data
   end
 
@@ -492,24 +497,76 @@ class MunicipalityDataService
     parse_development_projects_response(response) || []
   end
 
-  def self.fetch_zoning_records(municipality)
+  def self.fetch_zoning_code(municipality)
     response = OpenAI::Client.new.chat(
       parameters: {
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: "You are a zoning expert. Return only valid JSON for zoning records. Include zoning maps, rezoning requests, development incentives, and impact fees. Format: array of objects with fields: record_type (map/rezoning_request/incentive/impact_fee), title, description, status, effective_date (YYYY-MM-DD), url, details (object with type-specific information)."
+            content: "You are a zoning expert. Extract current zoning code information. Return valid JSON only with fields: title, url, last_updated, description, key_provisions. If you can't find specific information, return null for those fields but still try to return any information you can find."
           },
           {
             role: "user",
-            content: "Find zoning records, incentives, and fees for #{municipality.name}, #{municipality.state}."
+            content: "Find the current zoning code for #{municipality.name}, #{municipality.state}."
+          }
+        ]
+      }
+    )
+    parse_zoning_code_response(response) || {}  # Return empty hash if nothing found
+  rescue => e
+    Rails.logger.error "Error fetching zoning code for #{municipality.name}: #{e.message}"
+    {}
+  end
+
+  def self.fetch_zoning_maps(municipality)
+    # First try to find maps on the municipality website
+    website_maps = search_municipality_maps(municipality)
+
+    # Then use GPT to analyze and supplement
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a zoning expert. Extract current zoning map information. Return valid JSON only with fields: title, url, last_updated, coverage_area, map_type (interactive/static). If you find partial information, include it and set other fields to null."
+          },
+          {
+            role: "user",
+            content: "Find the current zoning maps for #{municipality.name}, #{municipality.state}. Known maps: #{website_maps.to_json}"
           }
         ]
       }
     )
 
-    parse_zoning_records_response(response) || []
+    maps = parse_zoning_maps_response(response) || []
+    maps + website_maps
+  rescue => e
+    Rails.logger.error "Error fetching zoning maps for #{municipality.name}: #{e.message}"
+    website_maps
+  end
+
+  def self.fetch_zoning_decisions(municipality)
+    response = OpenAI::Client.new.chat(
+      parameters: {
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a zoning expert. Extract recent zoning decisions and changes. Return valid JSON only with array of objects containing fields: decision_date, type (variance/amendment/rezoning), description, status, location. Return an empty array if no recent decisions are found."
+          },
+          {
+            role: "user",
+            content: "Find recent zoning decisions for #{municipality.name}, #{municipality.state} from the past year."
+          }
+        ]
+      }
+    )
+    parse_zoning_decisions_response(response) || []
+  rescue => e
+    Rails.logger.error "Error fetching zoning decisions for #{municipality.name}: #{e.message}"
+    []
   end
 
   def self.save_development_data(municipality, data)
@@ -528,20 +585,13 @@ class MunicipalityDataService
       end
     end
 
-    if data["zoning_records"].present?
-      data["zoning_records"].each do |record|
-        municipality.zoning_records.find_or_create_by!(
-          record_type: record["record_type"],
-          title: record["title"]
-        ) do |r|
-          r.description = record["description"]
-          r.status = record["status"]
-          r.effective_date = record["effective_date"]
-          r.url = record["url"]
-          r.details = record["details"] || {}
-        end
-      end
+    if data["development_score"].present?
+      municipality.create_development_score!(
+        current_score: data["development_score"]["current_score"]
+      )
     end
+  rescue => e
+    Rails.logger.error "Error saving development data for #{municipality.name}: #{e.message}"
   end
 
   def self.parse_development_projects_response(response)
@@ -555,14 +605,151 @@ class MunicipalityDataService
     end
   end
 
-  def self.parse_zoning_records_response(response)
+  def self.parse_zoning_code_response(response)
     return nil unless response['choices']&.first&.dig('message', 'content')
 
     begin
       JSON.parse(response['choices'].first['message']['content'])
     rescue JSON::ParserError => e
-      Rails.logger.error "Failed to parse zoning records response: #{e.message}"
+      Rails.logger.error "Failed to parse zoning code response: #{e.message}"
+      nil
+    end
+  end
+
+  def self.parse_zoning_maps_response(response)
+    return [] unless response['choices']&.first&.dig('message', 'content')
+
+    begin
+      JSON.parse(response['choices'].first['message']['content'])
+    rescue JSON::ParserError => e
+      Rails.logger.error "Failed to parse zoning maps response: #{e.message}"
       []
     end
+  end
+
+  def self.parse_zoning_decisions_response(response)
+    return [] unless response['choices']&.first&.dig('message', 'content')
+
+    begin
+      JSON.parse(response['choices'].first['message']['content'])
+    rescue JSON::ParserError => e
+      Rails.logger.error "Failed to parse zoning decisions response: #{e.message}"
+      []
+    end
+  end
+
+  def self.fetch_skyline_image(query)
+    # Implement your image fetching logic here using your preferred AI service
+    # This is a placeholder - you'll need to implement the actual API call
+    response = OpenAI::Client.new.images.generate(
+      parameters: {
+        prompt: "Beautiful skyline photograph of #{query}, cityscape, architectural, high quality",
+        size: "1024x1024",
+        n: 1
+      }
+    )
+
+    response.dig("data", 0, "url")
+  rescue => e
+    Rails.logger.error "Failed to fetch image for #{query}: #{e.message}"
+    nil
+  end
+
+  def self.fetch_and_attach_image(municipality)
+    return if municipality.image_url.present? && municipality.hero_image.attached?
+
+    begin
+      response = OpenAI::Client.new.images.generate(
+        parameters: {
+          prompt: "Beautiful skyline photograph of #{municipality.name}, #{municipality.state} cityscape, architectural, high quality",
+          size: "1024x1024",
+          n: 1
+        }
+      )
+
+      image_url = response.dig("data", 0, "url")
+      return unless image_url
+
+      # Download and attach the image
+      downloaded_image = URI.open(image_url)
+      municipality.hero_image.attach(
+        io: downloaded_image,
+        filename: "#{municipality.name.parameterize}-skyline.jpg",
+        content_type: 'image/jpeg'
+      )
+
+      # Only update the image_url if the attachment was successful
+      if municipality.hero_image.attached?
+        municipality.update(image_url: image_url)  # Store the original OpenAI URL
+      end
+    rescue => e
+      Rails.logger.error "Failed to fetch/attach image for #{municipality.name}: #{e.message}"
+      nil
+    end
+  end
+
+  def self.search_municipality_maps(municipality)
+    base_url = get_municipality_base_url(municipality)
+    return [] unless base_url
+
+    maps = []
+    map_keywords = ['zoning map', 'land use map', 'district map', 'planning map']
+
+    # Search main website
+    if doc = fetch_page(base_url)
+      doc.css('a').each do |link|
+        href = link.attr('href')
+        text = link.text.strip.downcase
+
+        next unless href && !href.empty?
+
+        if map_keywords.any? { |keyword| text.include?(keyword) }
+          maps << {
+            "title" => link.text.strip,
+            "url" => normalize_url(href, base_url),
+            "last_updated" => extract_date_from_context(link),
+            "map_type" => href.include?('arcgis') ? 'interactive' : 'static',
+            "coverage_area" => "#{municipality.name} #{municipality.state}"
+          }.compact
+        end
+      end
+    end
+
+    maps.uniq { |m| m["url"] }
+  rescue => e
+    Rails.logger.error "Error searching municipality maps for #{municipality.name}: #{e.message}"
+    []
+  end
+
+  def self.save_zoning_data(municipality, data)
+    if data["zoning_code"].present?
+      municipality.update(zoning_code: data["zoning_code"])
+    end
+
+    if data["zoning_maps"].present?
+      data["zoning_maps"].each do |map|
+        municipality.zoning_maps.find_or_create_by!(url: map["url"]) do |zm|
+          zm.title = map["title"]
+          zm.last_updated = map["last_updated"]
+          zm.coverage_area = map["coverage_area"]
+          zm.map_type = map["map_type"]
+        end
+      end
+    end
+
+    if data["zoning_decisions"].present?
+      data["zoning_decisions"].each do |decision|
+        municipality.zoning_decisions.find_or_create_by!(
+          decision_date: decision["decision_date"],
+          location: decision["location"]
+        ) do |zd|
+          zd.decision_type = decision["type"]
+          zd.description = decision["description"]
+          zd.status = decision["status"]
+        end
+      end
+    end
+  rescue => e
+    Rails.logger.error "Error saving zoning data for #{municipality.name}: #{e.message}"
   end
 end

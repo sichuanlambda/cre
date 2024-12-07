@@ -9,13 +9,10 @@
 #   end
 
 puts "Starting seed process..."
+puts "Creating/Updating municipalities..."
 
-# Don't clear existing data
-# Remove the destroy_all commands
-
-# Create municipalities
-municipalities = [
-  { name: "Albuquerque", state: "NM", country: "USA" },
+municipalities_data = [
+ { name: "Albuquerque", state: "NM", country: "USA" },
   { name: "Atlanta", state: "GA", country: "USA" },
   { name: "Austin", state: "TX", country: "USA" },
   { name: "Bakersfield", state: "CA", country: "USA" },
@@ -58,28 +55,33 @@ municipalities = [
   { name: "Washington", state: "DC", country: "USA" }
 ]
 
-puts "Creating/Updating municipalities..."
-municipalities.each do |muni_data|
-  municipality = Municipality.find_or_create_by!(name: muni_data[:name]) do |muni|
-    muni.state = muni_data[:state]
-    muni.country = muni_data[:country]
-    puts "Created new municipality: #{muni.name}, #{muni.state}"
-  end
+municipalities_data.each do |data|
+  municipality = Municipality.find_or_create_by!(
+    name: data[:name],
+    state: data[:state]
+  )
 
-  # Add retry logic for rate limits
-  retries = 0
-  begin
-    # Only fetch data if something is missing
-    if !municipality.council_members.exists? ||
-       !municipality.development_score.present? ||
-       !municipality.news_articles.exists? ||
-       !municipality.municipal_resources.exists?
+  # Check if this municipality needs data
+  needs_data = municipality.development_projects.empty? ||
+               municipality.zoning_maps.empty? ||
+               municipality.zoning_decisions.empty? ||
+               municipality.zoning_code.nil? ||
+               municipality.image_url.nil?
 
+  if needs_data
+    retries = 0
+    begin
       puts "Fetching missing data for #{municipality.name}..."
       data = MunicipalityDataService.generate_data_for_municipality(municipality)
 
+      # Add skyline image if missing
+      if !municipality.image_url.present? && data["skyline_image_url"].present?
+        puts "Adding skyline image..."
+        municipality.update!(image_url: data["skyline_image_url"])
+      end
+
       # Add council members if none exist
-      if !municipality.council_members.exists? && data["council_members"].present?
+      if municipality.council_members.empty? && data["council_members"].present?
         puts "Adding council members..."
         data["council_members"].each do |member_data|
           reelection_info = data["reelection_dates"]&.find { |rd| rd && rd["council_member_name"] == member_data["name"] }
@@ -103,7 +105,7 @@ municipalities.each do |muni_data|
       end
 
       # Add news articles if none exist
-      if !municipality.news_articles.exists? && data["news_articles"].present?
+      if !municipality.news_articles.empty? && data["news_articles"].present?
         puts "Saving news articles..."
         relevant_topics = [
           'rezoning', 'zoning', 'city council', 'council vote', 'council election',
@@ -132,7 +134,7 @@ municipalities.each do |muni_data|
       end
 
       # Add municipal resources if none exist
-      if !municipality.municipal_resources.exists? && data["municipal_resources"].present?
+      if !municipality.municipal_resources.empty? && data["municipal_resources"].present?
         puts "Saving municipal resources..."
         data["municipal_resources"].each do |category, resources|
           resources.each do |resource|
@@ -149,19 +151,68 @@ municipalities.each do |muni_data|
           end
         end
       end
-    else
-      puts "Skipping #{municipality.name} - data is complete"
-    end
 
-  rescue StandardError => e
-    retries += 1
-    if retries <= 3 && e.message.include?('status 429')
-      puts "Rate limited, waiting 60 seconds before retry #{retries}/3..."
-      sleep 60
-      retry
-    else
-      puts "Error fetching data for #{municipality.name}: #{e.message}"
+      # Add zoning maps if none exist
+      if !municipality.zoning_maps.empty? && data["zoning_maps"].present?
+        puts "Saving zoning maps..."
+        data["zoning_maps"].each do |map|
+          municipality.zoning_maps.find_or_create_by!(url: map["url"]) do |zm|
+            zm.title = map["title"]
+            zm.last_updated = map["last_updated"]
+            zm.coverage_area = map["coverage_area"]
+            zm.map_type = map["map_type"]
+          end
+        end
+      end
+
+      # Add zoning decisions if none exist
+      # if !municipality.zoning_decisions.empty? && data["zoning_decisions"].present?
+      #   puts "Saving zoning decisions..."
+      #   data["zoning_decisions"].each do |decision|
+      #     municipality.zoning_decisions.find_or_create_by!(
+      #       decision_date: decision["decision_date"],
+      #       location: decision["location"]
+      #     ) do |zd|
+      #       zd.decision_type = decision["type"]
+      #       zd.description = decision["description"]
+      #       zd.status = decision["status"]
+      #     end
+      #   end
+      # end
+
+      # Add development projects if none exist
+      if !municipality.development_projects.empty? && data["development_projects"].present?
+        puts "Saving development projects..."
+        data["development_projects"].each do |project|
+          begin
+            municipality.development_projects.find_or_create_by!(name: project["name"]) do |p|
+              p.project_type = project["project_type"]
+              p.status = project["status"]
+              p.description = project["description"]
+              p.estimated_completion = project["estimated_completion"]
+              p.estimated_cost = project["estimated_cost"]
+              p.developer_name = project["developer_name"]
+              p.project_url = project["project_url"]
+              p.details = project["details"] || {}
+            end
+          rescue ActiveRecord::RecordInvalid => e
+            puts "Skipping invalid project for #{municipality.name}: #{e.message}"
+          end
+        end
+      end
+
+    rescue StandardError => e
+      retries += 1
+      if retries <= 3 && e.message.include?('status 429')
+        puts "Rate limited, waiting 60 seconds before retry #{retries}/3..."
+        sleep 60
+        retry
+      else
+        puts "Error fetching data for #{municipality.name}: #{e.message}"
+      end
     end
+  else
+    puts "Skipping #{municipality.name} - data is complete"
   end
 end
 

@@ -3,13 +3,23 @@ class Municipality < ApplicationRecord
   has_many :news_articles, dependent: :destroy
   has_one :development_score, dependent: :destroy
   has_many :municipal_resources
+  has_one_attached :hero_image
+  has_many :zoning_maps, dependent: :destroy
+  has_many :zoning_decisions, dependent: :destroy
+  has_many :development_projects, dependent: :destroy
+  serialize :zoning_code, JSON
 
-  if self.connection.table_exists?('development_projects')
-    has_many :development_projects, dependent: :destroy
+  # Use a begin/rescue block to safely define associations
+  begin
+    has_many :development_projects, dependent: :destroy if connection.table_exists?('development_projects')
+  rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
+    # Silently skip if database isn't ready or table doesn't exist
   end
 
-  if self.connection.table_exists?('zoning_records')
-    has_many :zoning_records, dependent: :destroy
+  begin
+    has_many :zoning_records, dependent: :destroy if connection.table_exists?('zoning_records')
+  rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
+    # Silently skip if database isn't ready or table doesn't exist
   end
 
   validates :name, presence: true, uniqueness: true

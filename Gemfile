@@ -77,3 +77,5 @@ gem 'httparty'
 gem 'news-api'
 
 gem 'geocoder'
+
+gem 'open-uri'
