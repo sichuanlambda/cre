@@ -362,6 +362,20 @@
       width: 100%;
     }
   }
+
+  /* Add this to your existing styles */
+  .main-grid:empty {
+    display: none;
+  }
+
+  .stats-grid:empty {
+    display: none;
+  }
+
+  /* Adjust grid when there's only one column of content */
+  .main-grid > div:only-child {
+    grid-column: 1 / -1;
+  }
 </style>
 
 <div class="hero-wrapper">
@@ -402,130 +416,144 @@
 
 <div class="container">
   <div class="stats-grid">
-    <div class="stat-card">
-      <div class="label">Active Projects</div>
-      <div class="value"><%= @active_projects.count %></div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Council Members</div>
-      <div class="value"><%= @council_members.count %></div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Recent Updates</div>
-      <div class="value"><%= @news_articles.count %></div>
-    </div>
+    <% if @active_projects.any? %>
+      <div class="stat-card">
+        <div class="label">Active Projects</div>
+        <div class="value"><%= @active_projects.count %></div>
+      </div>
+    <% end %>
+    <% if @council_members.any? %>
+      <div class="stat-card">
+        <div class="label">Council Members</div>
+        <div class="value"><%= @council_members.count %></div>
+      </div>
+    <% end %>
+    <% if @news_articles.any? %>
+      <div class="stat-card">
+        <div class="label">Recent Updates</div>
+        <div class="value"><%= @news_articles.count %></div>
+      </div>
+    <% end %>
   </div>
 
   <div class="main-grid">
     <div class="main-content">
       <%# Development Projects Section %>
-      <div class="section-card">
-        <h2>Development Projects</h2>
-        <div class="project-timeline">
-          <% @active_projects.each do |project| %>
-            <div class="project-card active">
-              <h3 class="text-xl font-semibold"><%= project.name %></h3>
-              <div class="text-sm text-gray-600 mb-2">
-                <%= project.project_type&.titleize %> • 
-                <% if project.estimated_completion %>
-                  Est. Completion: <%= project.estimated_completion.strftime("%B %Y") %>
+      <% if @active_projects.any? %>
+        <div class="section-card">
+          <h2>Development Projects</h2>
+          <div class="project-timeline">
+            <% @active_projects.each do |project| %>
+              <div class="project-card active">
+                <h3 class="text-xl font-semibold"><%= project.name %></h3>
+                <div class="text-sm text-gray-600 mb-2">
+                  <%= project.project_type&.titleize %> • 
+                  <% if project.estimated_completion %>
+                    Est. Completion: <%= project.estimated_completion.strftime("%B %Y") %>
+                  <% end %>
+                </div>
+                <p class="text-gray-700"><%= project.description %></p>
+                <% if project.project_url %>
+                  <%= link_to "View Details →", project.project_url, 
+                      class: "inline-block mt-2 text-blue-600 hover:text-blue-800", 
+                      target: "_blank" %>
                 <% end %>
               </div>
-              <p class="text-gray-700"><%= project.description %></p>
-              <% if project.project_url %>
-                <%= link_to "View Details →", project.project_url, 
-                    class: "inline-block mt-2 text-blue-600 hover:text-blue-800", 
-                    target: "_blank" %>
-              <% end %>
-            </div>
-          <% end %>
+            <% end %>
+          </div>
         </div>
-      </div>
+      <% end %>
 
       <%# Council Members Section %>
-      <div class="section-card">
-        <h2>City Council</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <% @council_members.each do |member| %>
-            <div class="council-member-card">
-              <div class="member-avatar">
-                <%= member.name.first %>
-              </div>
-              <div>
-                <h3 class="font-semibold"><%= member.name %></h3>
-                <p class="text-sm text-gray-600"><%= member.position %></p>
-                <% if member.social_links.present? %>
-                  <div class="social-links">
-                    <% member.social_links.each do |platform, url| %>
-                      <%= link_to url, class: "social-link #{platform}", target: "_blank" do %>
-                        <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
+      <% if @council_members.any? %>
+        <div class="section-card">
+          <h2>City Council</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <% @council_members.each do |member| %>
+              <div class="council-member-card">
+                <div class="member-avatar">
+                  <%= member.name.first %>
+                </div>
+                <div>
+                  <h3 class="font-semibold"><%= member.name %></h3>
+                  <p class="text-sm text-gray-600"><%= member.position %></p>
+                  <% if member.social_links.present? %>
+                    <div class="social-links">
+                      <% member.social_links.each do |platform, url| %>
+                        <%= link_to url, class: "social-link #{platform}", target: "_blank" do %>
+                          <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
+                        <% end %>
                       <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="sidebar">
+      <%# News Section %>
+      <% if @news_articles.any? %>
+        <div class="section-card">
+          <h2>Recent Updates</h2>
+          <div class="space-y-4">
+            <% @news_articles.each do |article| %>
+              <div class="news-article">
+                <h3 class="font-medium">
+                  <%= link_to article.title, article.url, 
+                      class: "news-article-title", 
+                      target: "_blank" %>
+                </h3>
+                <p class="text-sm text-gray-500 my-1">
+                  <%= article.published_at&.strftime("%B %d, %Y") %>
+                </p>
+                <p class="text-sm text-gray-600">
+                  <%= truncate(article.description, length: 120) %>
+                </p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Zoning Information %>
+      <% if @zoning_maps.any? || @development_incentives.any? %>
+        <div class="section-card">
+          <h2>Zoning & Development</h2>
+          <% if @zoning_maps.any? %>
+            <div class="mb-4">
+              <h3 class="text-lg font-medium mb-2">Zoning Maps</h3>
+              <div class="space-y-2">
+                <% @zoning_maps.each do |map| %>
+                  <div class="p-3 bg-gray-50 rounded-lg">
+                    <%= link_to map.url, class: "flex items-center", target: "_blank" do %>
+                      <i class="fas fa-map-marked-alt text-blue-600 mr-2"></i>
+                      <span><%= map.title %></span>
                     <% end %>
                   </div>
                 <% end %>
               </div>
             </div>
           <% end %>
-        </div>
-      </div>
-    </div>
 
-    <div class="sidebar">
-      <%# News Section %>
-      <div class="section-card">
-        <h2>Recent Updates</h2>
-        <div class="space-y-4">
-          <% @news_articles.each do |article| %>
-            <div class="news-article">
-              <h3 class="font-medium">
-                <%= link_to article.title, article.url, 
-                    class: "news-article-title", 
-                    target: "_blank" %>
-              </h3>
-              <p class="text-sm text-gray-500 my-1">
-                <%= article.published_at&.strftime("%B %d, %Y") %>
-              </p>
-              <p class="text-sm text-gray-600">
-                <%= truncate(article.description, length: 120) %>
-              </p>
+          <% if @development_incentives.any? %>
+            <div class="mb-4">
+              <h3 class="text-lg font-medium mb-2">Development Incentives</h3>
+              <div class="space-y-2">
+                <% @development_incentives.each do |incentive| %>
+                  <div class="p-3 bg-green-50 rounded-lg">
+                    <h4 class="font-medium"><%= incentive.title %></h4>
+                    <p class="text-sm text-gray-600 mt-1"><%= incentive.description %></p>
+                  </div>
+                <% end %>
+              </div>
             </div>
           <% end %>
         </div>
-      </div>
-
-      <%# Zoning Information %>
-      <div class="section-card">
-        <h2>Zoning & Development</h2>
-        <% if @zoning_maps.any? %>
-          <div class="mb-4">
-            <h3 class="text-lg font-medium mb-2">Zoning Maps</h3>
-            <div class="space-y-2">
-              <% @zoning_maps.each do |map| %>
-                <div class="p-3 bg-gray-50 rounded-lg">
-                  <%= link_to map.url, class: "flex items-center", target: "_blank" do %>
-                    <i class="fas fa-map-marked-alt text-blue-600 mr-2"></i>
-                    <span><%= map.title %></span>
-                  <% end %>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-
-        <% if @development_incentives.any? %>
-          <div class="mb-4">
-            <h3 class="text-lg font-medium mb-2">Development Incentives</h3>
-            <div class="space-y-2">
-              <% @development_incentives.each do |incentive| %>
-                <div class="p-3 bg-green-50 rounded-lg">
-                  <h4 class="font-medium"><%= incentive.title %></h4>
-                  <p class="text-sm text-gray-600 mt-1"><%= incentive.description %></p>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-      </div>
+      <% end %>
     </div>
   </div>
 </div>
