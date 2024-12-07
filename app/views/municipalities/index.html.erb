@@ -23,6 +23,72 @@
     overflow: hidden;
   }
 
+  .municipality-name-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 2;
+  }
+
+  .municipality-name-overlay h2 {
+    color: white;
+    font-size: 2em;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    margin: 0;
+  }
+
+  .municipality-name-overlay p {
+    color: white;
+    font-size: 1.2em;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    margin: 5px 0 0 0;
+  }
+
+  .rating-description-overlay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    text-align: right;
+    z-index: 2;
+  }
+
+  .rating-description-overlay .rating-description {
+    color: white;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-size: 1.2em;
+    margin: 0;
+  }
+
+  .development-score {
+    position: absolute !important;
+    bottom: 20px !important;
+    top: auto !important;
+    right: 20px !important;
+    text-align: right;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+
+  .development-score .score {
+    color: white;
+    font-size: 2.5em;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .development-score h3 {
+    color: white;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    margin: 0;
+  }
+
   .municipality-card-image::before {
     content: '';
     position: absolute;
@@ -156,26 +222,6 @@
     margin-bottom: 10px;
   }
 
-  .development-score {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    text-align: right;
-  }
-
-  .development-score h3 {
-    font-size: 0.8em;
-    margin-top: 5px;
-    order: 2;
-    color: #666;
-  }
-
-  .development-score .score {
-    font-size: 1.8em;
-    font-weight: bold;
-    order: 1;
-  }
-
   .rating-description {
     color: #2ecc71;
   }
@@ -229,10 +275,6 @@
 
   .election-info {
     margin-left: auto;
-  }
-
-  .development-score .rating-description {
-    margin-top: -2px;
   }
 
   .page-header {
@@ -696,24 +738,6 @@
     background: #1a365d;
   }
 
-  .development-score {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 5px;
-  }
-
-  .development-score .score {
-    font-size: 2em;
-    font-weight: bold;
-    color: #2c5282;
-  }
-
-  .development-score .rating-description {
-    font-size: 0.9em;
-    color: #4a5568;
-  }
-
   .election-info {
     text-align: right;
     color: #4a5568;
@@ -1081,6 +1105,27 @@
   .municipality-name p {
     opacity: 0.8;
   }
+
+  /* Remove or override any conflicting styles */
+  .municipality-card .development-score .score,
+  .municipality-card .development-score h3,
+  .municipality-card .development-score .rating-description {
+    color: white !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* Remove any color styles that might be overriding */
+  .rating-description {
+    color: white !important;
+  }
+
+  /* Remove any conflicting styles that might be overriding the position */
+  .municipality-card-image .development-score {
+    position: absolute !important;
+    bottom: 20px !important;
+    top: auto !important;  /* Ensure top is not set */
+    right: 20px !important;
+  }
 </style>
 
 <header class="site-header">
@@ -1228,6 +1273,25 @@
         <% if municipality.image_url.present? %>
           <div class="municipality-card-image">
             <%= image_tag(municipality.image_url, alt: "#{municipality.name} skyline") %>
+            <div class="municipality-name-overlay">
+              <h2><%= municipality.name %></h2>
+              <p><%= municipality.state %></p>
+            </div>
+            <div class="rating-description-overlay">
+              <p class="rating-description"><%= 
+                case municipality.development_friendliness_rating
+                when 80..100 then "Very Friendly"
+                when 60..79 then "Friendly"
+                when 40..59 then "Somewhat Friendly"
+                when 20..39 then "Less Friendly"
+                else "Needs Improvement"
+                end
+              %></p>
+            </div>
+            <div class="development-score">
+              <div class="score"><%= municipality.development_friendliness_rating %></div>
+              <h3>Development Score</h3>
+            </div>
           </div>
         <% else %>
           <div class="municipality-card-header">
@@ -1238,28 +1302,6 @@
           </div>
         <% end %>
         <div class="municipality-card-content">
-          <h2>
-            <%= link_to municipality_path(municipality), 
-                class: "municipality-link",
-                data: { turbo_frame: "_top" } do %>
-              <%= municipality.name %>
-            <% end %>
-          </h2>
-          
-          <div class="development-score">
-            <div class="score"><%= municipality.development_friendliness_rating %></div>
-            <h3>Development Score</h3>
-            <p class="rating-description"><%= 
-              case municipality.development_friendliness_rating
-              when 80..100 then "Very Friendly"
-              when 60..79 then "Friendly"
-              when 40..59 then "Somewhat Friendly"
-              when 20..39 then "Less Friendly"
-              else "Needs Improvement"
-              end
-            %></p>
-          </div>
-
           <div class="municipality-details">
             <div class="news-articles">
               <div class="section-header">
