@@ -21,6 +21,9 @@
     position: relative;
     height: 250px;
     overflow: hidden;
+    display: block;
+    text-decoration: none;
+    color: inherit;
   }
 
   .municipality-name-overlay {
@@ -1090,6 +1093,9 @@
     padding: 2rem;
     color: white;
     border-radius: 1rem 1rem 0 0;
+    display: block;
+    text-decoration: none;
+    color: inherit;
   }
 
   .municipality-name {
@@ -1271,7 +1277,10 @@
     <% @municipalities.each do |municipality| %>
       <div class="municipality-card">
         <% if municipality.image_url.present? %>
-          <div class="municipality-card-image">
+          <%= link_to municipality_path(municipality), 
+              class: "municipality-card-image",
+              data: { turbo: false },
+              method: :get do %>
             <%= image_tag(municipality.image_url, alt: "#{municipality.name} skyline") %>
             <div class="municipality-name-overlay">
               <h2><%= municipality.name %></h2>
@@ -1292,14 +1301,14 @@
               <div class="score"><%= municipality.development_friendliness_rating %></div>
               <h3>Development Score</h3>
             </div>
-          </div>
+          <% end %>
         <% else %>
-          <div class="municipality-card-header">
+          <%= link_to municipality_path(municipality), class: "municipality-card-header" do %>
             <div class="municipality-name">
               <h2><%= municipality.name %></h2>
               <p><%= municipality.state %></p>
             </div>
-          </div>
+          <% end %>
         <% end %>
         <div class="municipality-card-content">
           <div class="municipality-details">
