@@ -11,8 +11,8 @@
     position: relative;
     overflow: hidden;
     border-radius: 1rem;
-    width: 400px;
-    flex: 0 0 400px;
+    width: 600px;
+    flex: 0 0 600px;
     background: white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
@@ -769,19 +769,15 @@
   }
 
   .resources-list li {
-    margin-bottom: 6px;
+    margin-bottom: 12px;
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 20px;
-    font-size: 0.95em;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .resources-list a {
     color: #2c5282;
     text-decoration: none;
-    flex: 1;
-    min-width: 0; /* Prevents text from overflowing */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -793,8 +789,7 @@
 
   .resource-date {
     color: #718096;
-    font-size: 0.9em;
-    white-space: nowrap;
+    font-size: 0.85em;
   }
 
   @media (max-width: 768px) {
@@ -1272,11 +1267,11 @@
               </div>
               <% if municipality.news_articles.any? %>
                 <ul>
-                  <% municipality.news_articles.limit(3).each do |article| %>
+                  <% municipality.news_articles.limit(2).each do |article| %>
                     <li>
                       <%= link_to article.title, article.url, target: "_blank" %>
                       <p class="article-date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
-                      <p class="article-description"><%= truncate(article.description, length: 150) %></p>
+                      <p class="article-description"><%= truncate(article.description, length: 100) %></p>
                     </li>
                   <% end %>
                 </ul>
