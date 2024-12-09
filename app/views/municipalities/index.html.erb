@@ -120,19 +120,73 @@
 
   .municipality-details {
     display: flex;
-    flex-direction: row;
-    gap: 20px;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 5px;
     border-top: 1px solid #e0e0e0;
-    margin-top: 20px;
-    padding-top: 20px;
+    margin-top: 5px;
+    padding-top: 5px;
   }
 
-  .info-column {
+  .news-and-council {
     display: flex;
-    flex-direction: row;
-    gap: 20px;
-    flex-wrap: wrap;
+    gap: 30px;
+  }
+
+  .news-articles,
+  .council-members {
+    flex: 1;
+  }
+
+  .council-member-card {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .council-member-card:last-child {
+    border-bottom: none;
+  }
+
+  .member-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .member-name-row h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .member-position {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 2px 0 0 0;
+  }
+
+  .social-links {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .social-link {
+    font-size: 0.9rem;
+    color: #666;
+    padding: 0 0.25rem;
+  }
+
+  .show-more-link {
+    display: block;
+    text-align: right;
+    padding: 8px 0;
+    color: #2563EB;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .show-more-link:hover {
+    text-decoration: underline;
   }
 
   .election-info {
@@ -150,35 +204,20 @@
   }
 
   .council-members {
-    position: relative;
-    width: 60%;
-    margin-left: auto;
-  }
-
-  .council-members .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    padding: 10px;
-  }
-
-  .council-members .content {
-    max-height: 0;
+    max-height: 300px;     /* Limit height */
     overflow: hidden;
-    transition: max-height 0.3s ease-out;
+    position: relative;
   }
 
-  .council-members.active .content {
-    max-height: 500px;
-  }
-
-  .toggle-icon {
-    transition: transform 0.3s ease;
-  }
-
-  .council-members.active .toggle-icon {
-    transform: rotate(180deg);
+  .council-members.has-overflow::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(transparent, white);
+    pointer-events: none;
   }
 
   .rating-description {
@@ -187,14 +226,14 @@
   }
 
   .social-links {
-    margin-top: 5px;
+    display: flex;
+    gap: 0.25rem;          /* Reduced from 0.5rem */
+    margin-top: 0.25rem;   /* Reduced from 0.5rem */
   }
 
   .social-link {
-    margin-left: 10px;
-    text-decoration: none;
-    color: #666;
-    font-size: 1.1em;
+    font-size: 0.9rem;
+    padding: 0 0.25rem;    /* Reduced horizontal padding */
   }
 
   .social-link:hover {
@@ -752,9 +791,9 @@
   }
 
   .municipal-resources-section {
-    margin-top: 5px;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
   }
 
   .municipal-resources-section .section-header {
@@ -1132,6 +1171,116 @@
     top: auto !important;  /* Ensure top is not set */
     right: 20px !important;
   }
+
+  /* Council Members Section */
+  .council-member-card {
+    display: flex;
+    align-items: flex-start;  /* Changed from center to flex-start */
+    gap: 0.75rem;            /* Reduced from 1rem */
+    padding: 0.75rem;        /* Reduced from 1rem */
+    background: #F9FAFB;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .member-avatar {
+    flex-shrink: 0;         /* Prevent avatar from shrinking */
+    width: 2.75rem;         /* Reduced from 3.5rem */
+    height: 2.75rem;        /* Reduced from 3.5rem */
+    border-radius: 50%;
+    background: #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;      /* Reduced from 1.5rem */
+    color: #6B7280;
+  }
+
+  .member-info {
+    flex: 1;
+    min-width: 0;          /* Allows text truncation to work */
+  }
+
+  .member-info h3 {
+    font-size: 0.95rem;    /* Reduced from default */
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .member-info p {
+    font-size: 0.85rem;    /* Reduced from default */
+    color: #6B7280;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Update the grid layout for council members */
+  .council-members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Adjusted minimum width */
+    gap: 0.75rem;          /* Reduced gap */
+    max-height: 400px;     /* Add max height */
+    overflow-y: auto;      /* Make it scrollable */
+    padding-right: 0.5rem; /* Add some padding for scrollbar */
+  }
+
+  /* Style the scrollbar */
+  .council-members-grid::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .council-members-grid::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .council-members-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  .council-members-grid::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  /* Social links adjustments */
+  .social-links {
+    display: flex;
+    gap: 0.25rem;          /* Reduced from 0.5rem */
+    margin-top: 0.25rem;   /* Reduced from 0.5rem */
+  }
+
+  .social-link {
+    font-size: 0.9rem;
+    padding: 0 0.25rem;    /* Reduced horizontal padding */
+  }
+
+  .council-members.has-overflow::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(transparent, white);
+    pointer-events: none;
+  }
+
+  .show-more-link {
+    display: block;
+    text-align: center;
+    padding: 0.5rem;
+    color: #2563EB;
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: 0.5rem;
+  }
+
+  .show-more-link:hover {
+    text-decoration: underline;
+  }
 </style>
 
 <header class="site-header">
@@ -1312,84 +1461,101 @@
         <% end %>
         <div class="municipality-card-content">
           <div class="municipality-details">
-            <div class="news-articles">
-              <div class="section-header">
-                <h3>Recent News</h3>
-              </div>
-              <% if municipality.news_articles.any? %>
-                <ul>
-                  <% municipality.news_articles.limit(2).each do |article| %>
-                    <li>
-                      <%= link_to article.title, article.url, target: "_blank" %>
-                      <p class="article-date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
-                      <p class="article-description"><%= truncate(article.description, length: 100) %></p>
-                    </li>
-                  <% end %>
-                </ul>
-              <% else %>
-                <p>No recent news available</p>
-              <% end %>
-            </div>
-
-            <div class="council-members">
-              <div class="section-header">
-                <h3>Council Members</h3>
-                <div class="election-info">
-                  <% if municipality.next_election_date %>
-                    <p><strong>Next Election:</strong> <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
-                  <% else %>
-                    <p><strong>Next Election:</strong> Not scheduled</p>
-                  <% end %>
+            <div class="news-and-council">
+              <!-- News Articles Section -->
+              <div class="news-articles">
+                <div class="section-header">
+                  <h3>Recent News</h3>
                 </div>
-              </div>
-              <ul>
-                <% municipality.council_members.each do |member| %>
-                  <li>
-                    <strong><%= member.name %></strong> <%= member.position %>
-                    <% if member.social_links.present? %>
-                      <div class="social-links">
-                        <% member.social_links.each do |platform, url| %>
-                          <%= link_to url, class: "social-link #{platform}", target: "_blank", title: platform.to_s.titleize do %>
-                            <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
-                          <% end %>
-                        <% end %>
-                      </div>
+                <% if municipality.news_articles.any? %>
+                  <ul>
+                    <% municipality.news_articles.limit(2).each do |article| %>
+                      <li>
+                        <%= link_to article.title, article.url, target: "_blank" %>
+                        <p class="article-date"><%= article.published_at&.strftime("%B %d, %Y") %></p>
+                        <p class="article-description"><%= truncate(article.description, length: 100) %></p>
+                      </li>
                     <% end %>
-                  </li>
+                  </ul>
+                <% else %>
+                  <p>No recent news available</p>
                 <% end %>
-              </ul>
-            </div>
-          </div>
+              </div>
 
-          <div class="municipal-resources-section">
-            <div class="section-header">
-              <h3>Municipal Resources</h3>
-            </div>
-            <% if municipality.municipal_resources.any? %>
-              <div class="resources-columns">
-                <% municipality.municipal_resources.group_by(&:category).each_slice(2) do |category_pair| %>
-                  <div class="resources-column">
-                    <% category_pair.each do |category, resources| %>
-                      <div class="resource-group">
-                        <h4 class="resource-category-title"><%= category.titleize %></h4>
-                        <ul class="resources-list">
-                          <% resources.take(3).each do |resource| %>
-                            <li>
-                              <%= link_to resource.title, resource.url, target: "_blank" %>
-                              <% if resource.last_updated %>
-                                <span class="resource-date">Updated: <%= resource.last_updated.strftime("%B %d, %Y") %></span>
-                              <% end %>
-                            </li>
-                          <% end %>
-                        </ul>
-                      </div>
+              <!-- Council Members Section -->
+              <div class="council-members" id="council-members-<%= municipality.id %>">
+                <div class="section-header">
+                  <h3>Council Members</h3>
+                  <div class="election-info">
+                    <% if municipality.next_election_date %>
+                      <p><strong>Next Election:</strong> <%= municipality.next_election_date.strftime("%B %d, %Y") %></p>
+                    <% else %>
+                      <p><strong>Next Election:</strong> Not scheduled</p>
                     <% end %>
                   </div>
+                </div>
+                
+                <div class="council-members-list">
+                  <% municipality.council_members.first(4).each do |member| %>
+                    <div class="council-member-card">
+                      <div class="member-info">
+                        <div class="member-name-row">
+                          <h3 title="<%= member.name %>"><%= member.name %></h3>
+                          <% if member.social_links.present? %>
+                            <div class="social-links">
+                              <% member.social_links.each do |platform, url| %>
+                                <%= link_to url, class: "social-link #{platform}", target: "_blank" do %>
+                                  <i class="fa-brands fa-<%= platform.to_s.downcase %>"></i>
+                                <% end %>
+                              <% end %>
+                            </div>
+                          <% end %>
+                        </div>
+                        <p class="member-position"><%= member.position %></p>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+                
+                <% if municipality.council_members.count > 4 %>
+                  <%= link_to municipality_path(municipality), class: "show-more-link", data: { turbo: false } do %>
+                    View all <%= municipality.council_members.count %> council members →
+                  <% end %>
                 <% end %>
               </div>
-            <% else %>
-              <p>No resources available</p>
-            <% end %>
+            </div>
+
+            <!-- Municipal Resources Section -->
+            <div class="municipal-resources-section">
+              <div class="section-header">
+                <h3>Municipal Resources</h3>
+              </div>
+              <% if municipality.municipal_resources.any? %>
+                <div class="resources-columns">
+                  <% municipality.municipal_resources.group_by(&:category).each_slice(2) do |category_pair| %>
+                    <div class="resources-column">
+                      <% category_pair.each do |category, resources| %>
+                        <div class="resource-group">
+                          <h4 class="resource-category-title"><%= category.titleize %></h4>
+                          <ul class="resources-list">
+                            <% resources.take(3).each do |resource| %>
+                              <li>
+                                <%= link_to resource.title, resource.url, target: "_blank" %>
+                                <% if resource.last_updated %>
+                                  <span class="resource-date">Updated: <%= resource.last_updated.strftime("%B %d, %Y") %></span>
+                                <% end %>
+                              </li>
+                            <% end %>
+                          </ul>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <p>No resources available</p>
+              <% end %>
+            </div>
           </div>
         </div>
       </div>
