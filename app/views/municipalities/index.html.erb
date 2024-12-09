@@ -823,7 +823,7 @@
   }
 
   .municipal-resources-section .section-header {
-    margin-bottom: 5px;
+    margin-bottom: 20px;
   }
 
   .municipal-resources-section h3 {
@@ -832,14 +832,13 @@
   }
 
   .resources-columns {
-    display: flex;
-    gap: 30px;
-    margin-top: 5px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;  /* Always two equal columns */
+    gap: 10px;
   }
 
   .resources-column {
-    flex: 1;
-    min-width: 0; /* Prevents flex items from overflowing */
+    min-width: 0;         /* Allows text truncation */
   }
 
   .resource-group {
@@ -852,6 +851,9 @@
     margin: 12px 0 8px;
     padding-bottom: 4px;
     border-bottom: 1px solid #eee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .resources-list {
@@ -886,8 +888,7 @@
 
   @media (max-width: 768px) {
     .resources-columns {
-      flex-direction: column;
-      gap: 15px;
+      grid-template-columns: 1fr;  /* Stack on mobile */
     }
   }
 
