@@ -441,23 +441,43 @@
       <%# Development Projects Section %>
       <% if @active_projects.any? %>
         <div class="section-card">
-          <h2>Development Projects</h2>
+          <div class="section-header">
+            <h2>Development Projects</h2>
+            <div class="controls">
+              <select data-action="change->projects#filter">
+                <option value="all">All Projects</option>
+                <option value="active">Active</option>
+                <option value="upcoming">Upcoming</option>
+              </select>
+              <select data-action="change->projects#sort">
+                <option value="date">Date</option>
+                <option value="budget">Budget</option>
+              </select>
+            </div>
+          </div>
           <div class="project-timeline">
             <% @active_projects.each do |project| %>
-              <div class="project-card active">
-                <h3 class="text-xl font-semibold"><%= project.name %></h3>
-                <div class="text-sm text-gray-600 mb-2">
-                  <%= project.project_type&.titleize %> • 
-                  <% if project.estimated_completion %>
-                    Est. Completion: <%= project.estimated_completion.strftime("%B %Y") %>
+              <div class="project-card active" 
+                   data-controller="project"
+                   data-action="click->project#toggleDetails">
+                <div class="project-summary">
+                  <h3 class="text-xl font-semibold"><%= project.name %></h3>
+                  <div class="text-sm text-gray-600 mb-2">
+                    <%= project.project_type&.titleize %> • 
+                    <% if project.estimated_completion %>
+                      Est. Completion: <%= project.estimated_completion.strftime("%B %Y") %>
+                    <% end %>
+                  </div>
+                  <p class="text-gray-700"><%= project.description %></p>
+                  <% if project.project_url %>
+                    <%= link_to "View Details →", project.project_url, 
+                        class: "inline-block mt-2 text-blue-600 hover:text-blue-800", 
+                        target: "_blank" %>
                   <% end %>
                 </div>
-                <p class="text-gray-700"><%= project.description %></p>
-                <% if project.project_url %>
-                  <%= link_to "View Details →", project.project_url, 
-                      class: "inline-block mt-2 text-blue-600 hover:text-blue-800", 
-                      target: "_blank" %>
-                <% end %>
+                <div class="project-details" data-project-target="details">
+                  <!-- Extended details, initially hidden -->
+                </div>
               </div>
             <% end %>
           </div>
@@ -465,9 +485,9 @@
       <% end %>
 
       <%# Council Members Section %>
-      <% if @council_members.any? %>
-        <div class="section-card">
-          <h2>City Council</h2>
+      <div class="section-card">
+        <h2>City Council</h2>
+        <% if @council_members.any? %>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <% @council_members.each do |member| %>
               <div class="council-member-card">
@@ -490,8 +510,17 @@
               </div>
             <% end %>
           </div>
-        </div>
-      <% end %>
+        <% elsif @error_loading_council %>
+          <div class="error-state">
+            <p>Unable to load council members. Please try again later.</p>
+            <button onclick="retryLoadCouncil()">Retry</button>
+          </div>
+        <% else %>
+          <div class="empty-state">
+            <p>No council members found for this municipality.</p>
+          </div>
+        <% end %>
+      </div>
     </div>
 
     <div class="sidebar">

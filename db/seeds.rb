@@ -61,27 +61,34 @@ municipalities_data.each do |data|
     state: data[:state]
   )
 
-  # Check if this municipality needs data
-  needs_data = municipality.development_projects.empty? ||
-               municipality.zoning_maps.empty? ||
-               municipality.zoning_decisions.empty? ||
-               municipality.zoning_code.nil? ||
-               municipality.image_url.nil?
+  # Check each type of data individually
+  missing_data = {
+    development_projects: municipality.development_projects.empty?,
+    zoning_maps: municipality.zoning_maps.empty?,
+    zoning_code: municipality.zoning_code.nil?,
+    image_url: municipality.image_url.nil?,
+    council_members: municipality.council_members.empty?,
+    news_articles: municipality.news_articles.empty?,
+    municipal_resources: municipality.municipal_resources.empty?,
+    development_score: !municipality.development_score
+  }
 
-  if needs_data
+  if missing_data.values.any?(true)
     retries = 0
     begin
       puts "Fetching missing data for #{municipality.name}..."
+      puts "Missing: #{missing_data.select { |k,v| v }.keys.join(', ')}"
+
       data = MunicipalityDataService.generate_data_for_municipality(municipality)
 
       # Add skyline image if missing
-      if !municipality.image_url.present? && data["skyline_image_url"].present?
+      if missing_data[:image_url] && data["skyline_image_url"].present?
         puts "Adding skyline image..."
         municipality.update!(image_url: data["skyline_image_url"])
       end
 
       # Add council members if none exist
-      if municipality.council_members.empty? && data["council_members"].present?
+      if missing_data[:council_members] && data["council_members"].present?
         puts "Adding council members..."
         data["council_members"].each do |member_data|
           reelection_info = data["reelection_dates"]&.find { |rd| rd && rd["council_member_name"] == member_data["name"] }
@@ -97,15 +104,15 @@ municipalities_data.each do |data|
       end
 
       # Create development score if missing
-      if !municipality.development_score && data["development_score"]
+      if missing_data[:development_score] && data["development_score"]
         puts "Creating development score..."
         municipality.create_development_score!(
           current_score: data["development_score"]["current_score"]
         )
       end
 
-      # Add news articles if none exist
-      if !municipality.news_articles.empty? && data["news_articles"].present?
+      # Add news articles if missing
+      if missing_data[:news_articles] && data["news_articles"].present?
         puts "Saving news articles..."
         relevant_topics = [
           'rezoning', 'zoning', 'city council', 'council vote', 'council election',
@@ -117,7 +124,6 @@ municipalities_data.each do |data|
 
         data["news_articles"].each do |article_data|
           begin
-            # Only create articles that match our relevant topics
             if relevant_topics.any? { |topic|
               (article_data[:title].to_s.downcase + article_data[:description].to_s.downcase).include?(topic)
             }
@@ -133,8 +139,8 @@ municipalities_data.each do |data|
         end
       end
 
-      # Add municipal resources if none exist
-      if !municipality.municipal_resources.empty? && data["municipal_resources"].present?
+      # Add municipal resources if missing
+      if missing_data[:municipal_resources] && data["municipal_resources"].present?
         puts "Saving municipal resources..."
         data["municipal_resources"].each do |category, resources|
           resources.each do |resource|
@@ -152,8 +158,8 @@ municipalities_data.each do |data|
         end
       end
 
-      # Add zoning maps if none exist
-      if !municipality.zoning_maps.empty? && data["zoning_maps"].present?
+      # Add zoning maps if missing
+      if missing_data[:zoning_maps] && data["zoning_maps"].present?
         puts "Saving zoning maps..."
         data["zoning_maps"].each do |map|
           municipality.zoning_maps.find_or_create_by!(url: map["url"]) do |zm|
@@ -165,23 +171,8 @@ municipalities_data.each do |data|
         end
       end
 
-      # Add zoning decisions if none exist
-      # if !municipality.zoning_decisions.empty? && data["zoning_decisions"].present?
-      #   puts "Saving zoning decisions..."
-      #   data["zoning_decisions"].each do |decision|
-      #     municipality.zoning_decisions.find_or_create_by!(
-      #       decision_date: decision["decision_date"],
-      #       location: decision["location"]
-      #     ) do |zd|
-      #       zd.decision_type = decision["type"]
-      #       zd.description = decision["description"]
-      #       zd.status = decision["status"]
-      #     end
-      #   end
-      # end
-
-      # Add development projects if none exist
-      if !municipality.development_projects.empty? && data["development_projects"].present?
+      # Add development projects if missing
+      if missing_data[:development_projects] && data["development_projects"].present?
         puts "Saving development projects..."
         data["development_projects"].each do |project|
           begin
@@ -212,7 +203,7 @@ municipalities_data.each do |data|
       end
     end
   else
-    puts "Skipping #{municipality.name} - data is complete"
+    puts "Skipping #{municipality.name} - all data is complete"
   end
 end
 
