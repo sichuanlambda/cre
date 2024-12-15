@@ -79,3 +79,7 @@ gem 'news-api'
 gem 'geocoder'
 
 gem 'open-uri'
+
+gem 'down'
+
+gem 'mini_magick'

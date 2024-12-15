@@ -17,4 +17,7 @@ Rails.application.routes.draw do
 
   #zoning checker
   get '/checker', to: 'zoning#checker'
+
+  get 'logo_fetcher/new', to: 'logo_fetcher#new'
+  post 'logo_fetcher/fetch', to: 'logo_fetcher#fetch'
 end
