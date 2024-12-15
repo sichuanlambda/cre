@@ -1,26 +1,155 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-    <h1 class="text-2xl font-bold mb-4">Logo Fetcher</h1>
+<style>
+  .logo-fetcher-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f6f8ff 0%, #ffffff 100%);
+    padding: 2rem;
+  }
+
+  .card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    transition: all 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  }
+
+  .title {
+    font-size: 2.5rem;
+    background: linear-gradient(120deg, #4f46e5, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+  }
+
+  .input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 1rem;
+    padding-left: 2.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .input-field:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+  }
+
+  .fetch-button {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(120deg, #4f46e5, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .fetch-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  }
+
+  .loading-animation {
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 12px;
+    margin-top: 1rem;
+  }
+
+  .result-container {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+  }
+
+  .logo-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+
+  .copy-button {
+    padding: 0.5rem 1rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .copy-button:hover {
+    background: #4338ca;
+  }
+
+  .success-message {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 1rem 2rem;
+    background: #10b981;
+    color: white;
+    border-radius: 8px;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+</style>
+
+<div class="logo-fetcher-container">
+  <div class="card">
+    <h1 class="title">Logo Fetcher</h1>
     
-    <div class="mb-4">
-      <label for="website_url" class="block text-sm font-medium text-gray-700">
-        Website URL
-      </label>
-      <div class="mt-1">
-        <input type="text" 
-               name="website_url" 
-               id="website_url" 
-               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-               placeholder="example.com">
-      </div>
+    <div class="input-group">
+      <span class="input-icon">
+        <svg width="20" height="20" fill="none" stroke="currentColor">
+          <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <input type="text" 
+             name="website_url" 
+             id="website_url" 
+             class="input-field"
+             placeholder="Enter website URL (e.g., example.com)">
     </div>
 
-    <button id="fetchLogoBtn" 
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-      Fetch Logo
+    <button id="fetchLogoBtn" class="fetch-button">
+      <span>Fetch Logo</span>
     </button>
 
-    <div id="status" class="mt-4 hidden">
+    <div id="status" class="loading-animation hidden">
       <div class="animate-pulse flex space-x-4">
         <div class="flex-1 space-y-4 py-1">
           <div class="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -28,19 +157,43 @@
       </div>
     </div>
 
-    <div id="result" class="mt-4 hidden">
-      <div class="border rounded-lg p-4">
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Retrieved Logo</h3>
-        <img id="logoImage" src="" alt="Company Logo" class="max-w-full h-auto">
+    <div id="result" class="result-container hidden">
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Retrieved Logo</h3>
+      <img id="logoImage" src="" alt="Company Logo" class="logo-image">
+      <div class="flex gap-2">
         <input type="text" 
                id="logoUrl" 
-               class="mt-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" 
+               class="input-field"
                readonly>
-        <button onclick="copyLogoUrl()" 
-                class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        <button onclick="copyLogoUrl()" class="copy-button">
           Copy URL
         </button>
       </div>
     </div>
   </div>
-</div> 
+</div>
+
+<script>
+  // Add some nice interactions
+  document.getElementById('website_url').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      document.getElementById('fetchLogoBtn').click();
+    }
+  });
+
+  function copyLogoUrl() {
+    const logoUrl = document.getElementById('logoUrl');
+    logoUrl.select();
+    document.execCommand('copy');
+    
+    // Show success message
+    const message = document.createElement('div');
+    message.className = 'success-message';
+    message.textContent = 'URL copied to clipboard!';
+    document.body.appendChild(message);
+    
+    setTimeout(() => {
+      message.remove();
+    }, 3000);
+  }
+</script> 
