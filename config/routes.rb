@@ -1,3 +1,5 @@
+require 'sidekiq/web'
+
 Rails.application.routes.draw do
   #directory tools
   post '/analyzer/new', to: 'analyzer#new'
@@ -20,4 +22,10 @@ Rails.application.routes.draw do
 
   get 'logo_fetcher/new', to: 'logo_fetcher#new'
   post 'logo_fetcher/fetch', to: 'logo_fetcher#fetch'
+
+  # For logo fetcher
+  post 'logo_fetcher/bulk_process', to: 'logo_fetcher#bulk_process'
+  get 'logo_fetcher/job_status/:id', to: 'logo_fetcher#job_status'
+
+  mount Sidekiq::Web => '/sidekiq'
 end

@@ -83,3 +83,6 @@ gem 'open-uri'
 gem 'down'
 
 gem 'mini_magick'
+
+gem 'sidekiq'
+gem 'redis'
