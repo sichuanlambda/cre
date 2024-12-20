@@ -28,4 +28,7 @@ Rails.application.routes.draw do
   get 'logo_fetcher/job_status/:id', to: 'logo_fetcher#job_status'
 
   mount Sidekiq::Web => '/sidekiq'
+
+  get 'kml_generator/new'
+  post 'kml_generator', to: 'kml_generator#create'
 end

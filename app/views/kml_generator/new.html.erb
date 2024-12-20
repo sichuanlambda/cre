@@ -1,0 +1,105 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-2xl font-bold mb-6">Building Envelope KML Generator</h1>
+
+    <%= form_with url: kml_generator_path, method: :post, class: "space-y-6", data: { turbo: false } do |f| %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <h2 class="text-lg font-semibold">Location</h2>
+          
+          <div>
+            <%= f.label :coordinates, "Coordinates (paste from Google Maps)", 
+                class: "block text-sm font-medium text-gray-700" %>
+            <%= f.text_field :coordinates, 
+                placeholder: "e.g., 35.494299911154606, -97.55428026579938",
+                value: "35.494299911154606, -97.55428026579938",
+                required: true,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+            <p class="mt-1 text-sm text-gray-500">Right-click on Google Maps and select "Copy coordinates"</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-lg font-semibold">Lot Dimensions (feet)</h2>
+          
+          <div>
+            <%= f.label :lot_width, "Lot Width", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :lot_width, 
+                value: 100,
+                step: "any",
+                required: true,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+
+          <div>
+            <%= f.label :lot_depth, "Lot Depth", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :lot_depth,
+                value: 150,
+                step: "any",
+                required: true,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-lg font-semibold">Setbacks (feet)</h2>
+          
+          <div>
+            <%= f.label :front_setback, "Front Setback", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :front_setback,
+                value: 25,
+                step: "any",
+                required: true,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+
+          <div>
+            <%= f.label :rear_setback, "Rear Setback", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :rear_setback,
+                value: 20,
+                step: "any",
+                required: true,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+
+          <div>
+            <%= f.label :side_setback, "Side Setback", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :side_setback,
+                value: 10,
+                step: "any",
+                required: true,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-lg font-semibold">Building Restrictions</h2>
+          
+          <div>
+            <%= f.label :floor_area_ratio, "Floor Area Ratio (FAR)", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :floor_area_ratio,
+                value: 0.5,
+                step: "0.01",
+                required: true,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+            <p class="mt-1 text-sm text-gray-500">Typical range: 0.35 to 2.0</p>
+          </div>
+
+          <div>
+            <%= f.label :max_height, "Maximum Height (feet)", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :max_height,
+                value: 35,
+                step: "any",
+                required: true,
+                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+            <p class="mt-1 text-sm text-gray-500">Typical residential height limit</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <%= f.submit "Generate KML", class: "w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
+      </div>
+    <% end %>
+  </div>
+</div> 
