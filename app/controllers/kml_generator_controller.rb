@@ -106,12 +106,44 @@ class KmlGeneratorController < ApplicationController
   end
 
   def parse_coordinates(coord_string)
-    # Remove any whitespace and split by comma
-    lat, lng = coord_string.gsub(/\s+/, '').split(',').map(&:to_f)
+    # First try the decimal format
+    if coord_string.match?(/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/)
+      lat, lng = coord_string.gsub(/\s+/, '').split(',').map(&:to_f)
+      return { latitude: lat, longitude: lng } if valid_coordinates?(lat, lng)
+    end
 
-    # Return nil if coordinates are invalid
-    return nil unless lat && lng && lat.between?(-90, 90) && lng.between?(-180, 180)
+    # Try Google Earth DMS format (e.g., 35°29'06"N 97°32'28"W)
+    if coord_string.match?(/^\d+°\d+'\d+"[NS]\s+\d+°\d+'\d+"[EW]$/)
+      begin
+        lat_dms, lng_dms = coord_string.split(/\s+/)
+        lat = convert_dms_to_decimal(lat_dms)
+        lng = convert_dms_to_decimal(lng_dms)
+        return { latitude: lat, longitude: lng } if valid_coordinates?(lat, lng)
+      rescue
+        return nil
+      end
+    end
 
-    { latitude: lat, longitude: lng }
+    nil
+  end
+
+  def convert_dms_to_decimal(dms)
+    # Extract numbers and direction
+    match = dms.match(/(\d+)°(\d+)'(\d+)"([NSEW])/)
+    return nil unless match
+
+    degrees, minutes, seconds, direction = match.captures
+
+    # Convert to decimal
+    decimal = degrees.to_f + (minutes.to_f / 60) + (seconds.to_f / 3600)
+
+    # Make negative if South or West
+    decimal *= -1 if direction == 'S' || direction == 'W'
+
+    decimal
+  end
+
+  def valid_coordinates?(lat, lng)
+    lat && lng && lat.between?(-90, 90) && lng.between?(-180, 180)
   end
 end
