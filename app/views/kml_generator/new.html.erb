@@ -1,120 +1,237 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+<style>
+  .kml-generator-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .generator-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .generator-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+
+  .form-section {
+    flex: 0 0 60%;  /* Takes up 60% of the space */
+  }
+
+  .preview-container {
+    flex: 0 0 40%;  /* Takes up 40% of the space */
+    position: sticky;
+    top: 2rem;      /* Keeps preview visible while scrolling */
+  }
+
+  .form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .input-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .input-field {
+    padding: 0.75rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+
+  .input-field:focus {
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    outline: none;
+  }
+
+  .help-text {
+    font-size: 0.8rem;
+    color: #6B7280;
+  }
+
+  .preview-section {
+    margin-top: 2rem;
+    border-top: 1px solid #E5E7EB;
+    padding-top: 2rem;
+  }
+
+  .submit-button {
+    background: #2563EB;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    width: 100%;
+    margin-top: 2rem;
+    transition: background-color 0.2s;
+  }
+
+  .submit-button:hover {
+    background: #1D4ED8;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 1024px) {
+    .generator-layout {
+      flex-direction: column;
+    }
+    
+    .form-section,
+    .preview-container {
+      flex: 1 1 100%;
+    }
+
+    .preview-container {
+      position: static;
+    }
+  }
+</style>
+
+<div class="kml-generator-container">
+  <div class="generator-card">
     <h1 class="text-2xl font-bold mb-6">Building Envelope KML Generator</h1>
 
-    <%= form_with url: kml_generator_path, method: :post, class: "space-y-6", data: { turbo: false } do |f| %>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-4">
-          <h2 class="text-lg font-semibold">Location</h2>
-          
-          <div>
-            <%= f.label :coordinates, "Coordinates (paste from Google Maps)", 
-                class: "block text-sm font-medium text-gray-700" %>
-            <%= f.text_field :coordinates, 
-                placeholder: "e.g., 35.494299911154606, -97.55428026579938",
-                value: "35.494299911154606, -97.55428026579938",
-                required: true,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-            <p class="mt-1 text-sm text-gray-500">Right-click on Google Maps and select "Copy coordinates"</p>
-          </div>
-        </div>
+    <div class="generator-layout">
+      <div class="form-section">
+        <%= form_with url: kml_generator_path, method: :post, data: { turbo: false } do |f| %>
+          <div class="form-grid">
+            <div class="input-section">
+              <h2 class="section-title">Location</h2>
+              <div class="input-group">
+                <%= f.label :coordinates, "Coordinates", class: "input-label" %>
+                <%= f.text_field :coordinates, 
+                    placeholder: "e.g., 35.494299911154606, -97.55428026579938",
+                    value: "35.494299911154606, -97.55428026579938",
+                    required: true,
+                    class: "input-field" %>
+                <p class="help-text">Right-click on Google Maps and select "Copy coordinates"</p>
+              </div>
+            </div>
 
-        <div class="space-y-4">
-          <h2 class="text-lg font-semibold">Lot Dimensions (feet)</h2>
-          
-          <div>
-            <%= f.label :lot_width, "Lot Width", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :lot_width, 
-                value: 100,
-                step: "any",
-                required: true,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+            <div class="input-section">
+              <h2 class="section-title">Lot Dimensions</h2>
+              <div class="input-group">
+                <%= f.label :lot_width, "Lot Width (feet)", class: "input-label" %>
+                <%= f.number_field :lot_width, 
+                    value: 100,
+                    step: "any",
+                    required: true,
+                    class: "input-field" %>
+              </div>
+
+              <div class="input-group">
+                <%= f.label :lot_depth, "Lot Depth (feet)", class: "input-label" %>
+                <%= f.number_field :lot_depth,
+                    value: 150,
+                    step: "any",
+                    required: true,
+                    class: "input-field" %>
+              </div>
+            </div>
+
+            <div class="input-section">
+              <h2 class="section-title">Setbacks</h2>
+              <div class="input-group">
+                <%= f.label :front_setback, "Front Setback (feet)", class: "input-label" %>
+                <%= f.number_field :front_setback,
+                    value: 25,
+                    step: "any",
+                    required: true,
+                    class: "input-field" %>
+              </div>
+
+              <div class="input-group">
+                <%= f.label :rear_setback, "Rear Setback (feet)", class: "input-label" %>
+                <%= f.number_field :rear_setback,
+                    value: 20,
+                    step: "any",
+                    required: true,
+                    class: "input-field" %>
+              </div>
+
+              <div class="input-group">
+                <%= f.label :side_setback, "Side Setback (feet)", class: "input-label" %>
+                <%= f.number_field :side_setback,
+                    value: 10,
+                    step: "any",
+                    required: true,
+                    class: "input-field" %>
+              </div>
+            </div>
+
+            <div class="input-section">
+              <h2 class="section-title">Building Restrictions</h2>
+              <div class="input-group">
+                <%= f.label :floor_area_ratio, "Floor Area Ratio (FAR)", class: "input-label" %>
+                <%= f.number_field :floor_area_ratio,
+                    value: 0.5,
+                    step: "0.01",
+                    required: true,
+                    class: "input-field" %>
+                <p class="help-text">Typical range: 0.35 to 2.0</p>
+              </div>
+
+              <div class="input-group">
+                <%= f.label :max_height, "Maximum Height (feet)", class: "input-label" %>
+                <%= f.number_field :max_height,
+                    value: 35,
+                    step: "any",
+                    required: true,
+                    class: "input-field" %>
+                <p class="help-text">Typical residential height limit</p>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <%= f.label :lot_depth, "Lot Depth", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :lot_depth,
-                value: 150,
-                step: "any",
-                required: true,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <h2 class="text-lg font-semibold">Setbacks (feet)</h2>
-          
-          <div>
-            <%= f.label :front_setback, "Front Setback", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :front_setback,
-                value: 25,
-                step: "any",
-                required: true,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-          </div>
-
-          <div>
-            <%= f.label :rear_setback, "Rear Setback", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :rear_setback,
-                value: 20,
-                step: "any",
-                required: true,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-          </div>
-
-          <div>
-            <%= f.label :side_setback, "Side Setback", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :side_setback,
-                value: 10,
-                step: "any",
-                required: true,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <h2 class="text-lg font-semibold">Building Restrictions</h2>
-          
-          <div>
-            <%= f.label :floor_area_ratio, "Floor Area Ratio (FAR)", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :floor_area_ratio,
-                value: 0.5,
-                step: "0.01",
-                required: true,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-            <p class="mt-1 text-sm text-gray-500">Typical range: 0.35 to 2.0</p>
-          </div>
-
-          <div>
-            <%= f.label :max_height, "Maximum Height (feet)", class: "block text-sm font-medium text-gray-700" %>
-            <%= f.number_field :max_height,
-                value: 35,
-                step: "any",
-                required: true,
-                class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-            <p class="mt-1 text-sm text-gray-500">Typical residential height limit</p>
-          </div>
-        </div>
+          <%= f.submit "Generate KML", class: "submit-button" %>
+        <% end %>
       </div>
 
-      <div class="mt-6">
-        <%= f.submit "Generate KML", class: "w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
-      </div>
-    <% end %>
+      <div class="preview-container">
+        <div class="preview-section" style="margin-top: 0;">
+          <h2 class="section-title">3D Preview</h2>
+          <div id="preview3D" class="w-full rounded-lg bg-gray-50" 
+               style="height: 400px; position: relative; overflow: hidden;">
+          </div>
+        </div>
 
-    <div class="preview-container mt-6">
-      <h2 class="text-lg font-semibold mb-4">3D Preview</h2>
-      <div id="preview3D" class="w-full h-96 rounded-lg bg-gray-100" 
-           style="position: relative; overflow: hidden; min-height: 400px;">
-      </div>
-    </div>
-
-    <div class="mt-6">
-      <h2 class="text-lg font-semibold mb-4">KML Preview</h2>
-      <div class="bg-gray-50 rounded-lg p-4 overflow-auto max-h-64">
-        <pre class="text-sm text-gray-700" id="kmlPreview">
-          Loading preview...
-        </pre>
+        <div class="preview-section">
+          <h2 class="section-title">KML Preview</h2>
+          <div class="bg-gray-50 rounded-lg p-4 overflow-auto" style="max-height: 300px;">
+            <pre class="text-sm text-gray-700" id="kmlPreview">
+              Loading preview...
+            </pre>
+          </div>
+        </div>
       </div>
     </div>
   </div>
