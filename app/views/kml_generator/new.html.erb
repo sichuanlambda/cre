@@ -1,6 +1,6 @@
 <style>
   .kml-generator-container {
-    max-width: 1280px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 2rem;
   }
@@ -19,18 +19,18 @@
   }
 
   .form-section {
-    flex: 0 0 60%;  /* Takes up 60% of the space */
+    flex: 0 0 70%;
   }
 
   .preview-container {
-    flex: 0 0 40%;  /* Takes up 40% of the space */
+    flex: 0 0 30%;
     position: sticky;
-    top: 2rem;      /* Keeps preview visible while scrolling */
+    top: 2rem;
   }
 
   .form-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 2rem;
     margin-top: 2rem;
   }
@@ -54,7 +54,9 @@
   }
 
   .input-field {
-    padding: 0.75rem;
+    max-width: 100%;
+    width: 100%;
+    padding: 0.625rem;
     border: 1px solid #E5E7EB;
     border-radius: 0.5rem;
     font-size: 1rem;
@@ -81,11 +83,13 @@
   .submit-button {
     background: #2563EB;
     color: white;
-    padding: 1rem 2rem;
+    padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-weight: 500;
-    width: 100%;
+    width: auto;
     margin-top: 2rem;
+    margin-left: auto;
+    display: block;
     transition: background-color 0.2s;
   }
 
@@ -112,6 +116,13 @@
 
     .preview-container {
       position: static;
+    }
+  }
+
+  /* Add responsive behavior for the form grid */
+  @media (max-width: 768px) {
+    .form-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
@@ -212,7 +223,7 @@
             </div>
           </div>
 
-          <%= f.submit "Generate KML", class: "submit-button" %>
+          <%= f.submit "Export File", class: "submit-button" %>
         <% end %>
       </div>
 
@@ -221,15 +232,6 @@
           <h2 class="section-title">3D Preview</h2>
           <div id="preview3D" class="w-full rounded-lg bg-gray-50" 
                style="height: 400px; position: relative; overflow: hidden;">
-          </div>
-        </div>
-
-        <div class="preview-section">
-          <h2 class="section-title">KML Preview</h2>
-          <div class="bg-gray-50 rounded-lg p-4 overflow-auto" style="max-height: 300px;">
-            <pre class="text-sm text-gray-700" id="kmlPreview">
-              Loading preview...
-            </pre>
           </div>
         </div>
       </div>
