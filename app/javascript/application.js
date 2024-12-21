@@ -2,3 +2,4 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 import "./logo_fetcher"
+import "./preview3d"

@@ -101,5 +101,21 @@
         <%= f.submit "Generate KML", class: "w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" %>
       </div>
     <% end %>
+
+    <div class="preview-container mt-6">
+      <h2 class="text-lg font-semibold mb-4">3D Preview</h2>
+      <div id="preview3D" class="w-full h-96 rounded-lg bg-gray-100" 
+           style="position: relative; overflow: hidden; min-height: 400px;">
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <h2 class="text-lg font-semibold mb-4">KML Preview</h2>
+      <div class="bg-gray-50 rounded-lg p-4 overflow-auto max-h-64">
+        <pre class="text-sm text-gray-700" id="kmlPreview">
+          Loading preview...
+        </pre>
+      </div>
+    </div>
   </div>
-</div> 
+</div>
