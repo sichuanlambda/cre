@@ -163,11 +163,39 @@ class BuildingPreview {
 }
 
 function generateKMLPreview(coords, specs) {
-  const [lat, lng] = coords.split(',').map(c => c.trim());
+  const [lat, lng] = coords.split(',').map(c => parseFloat(c.trim()));
   
-  // Calculate building footprint coordinates based on setbacks
-  const buildingWidth = specs.lotWidth - (specs.sideSetback * 2);
+  // Convert feet to degrees (approximate)
+  const latDegreePerFoot = 1.0 / 364000.0;
+  const lngDegreePerFoot = 1.0 / (364000.0 * Math.cos(lat * Math.PI / 180));
+  
+  // Calculate buildable area
+  const buildableWidth = specs.lotWidth - (specs.sideSetback * 2);
   const buildingDepth = specs.lotDepth - specs.frontSetback - specs.rearSetback;
+
+  // Calculate corners (clockwise from northwest)
+  const footprint = [
+    // NW corner
+    [lat + (buildingDepth/2 * latDegreePerFoot),
+     lng - (buildableWidth/2 * lngDegreePerFoot)],
+    // NE corner
+    [lat + (buildingDepth/2 * latDegreePerFoot),
+     lng + (buildableWidth/2 * lngDegreePerFoot)],
+    // SE corner
+    [lat - (buildingDepth/2 * latDegreePerFoot),
+     lng + (buildableWidth/2 * lngDegreePerFoot)],
+    // SW corner
+    [lat - (buildingDepth/2 * latDegreePerFoot),
+     lng - (buildableWidth/2 * lngDegreePerFoot)],
+    // Close the polygon by repeating NW corner
+    [lat + (buildingDepth/2 * latDegreePerFoot),
+     lng - (buildableWidth/2 * lngDegreePerFoot)]
+  ];
+
+  // Format coordinates for KML (longitude,latitude,altitude)
+  const coordinates = footprint
+    .map(point => `${point[1]},${point[0]},${specs.maxHeight}`)
+    .join('\n              ');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -186,11 +214,7 @@ function generateKMLPreview(coords, specs) {
         <outerBoundaryIs>
           <LinearRing>
             <coordinates>
-              ${lng},${lat},${specs.maxHeight}
-              ${lng + 0.0001},${lat},${specs.maxHeight}
-              ${lng + 0.0001},${lat + 0.0001},${specs.maxHeight}
-              ${lng},${lat + 0.0001},${specs.maxHeight}
-              ${lng},${lat},${specs.maxHeight}
+              ${coordinates}
             </coordinates>
           </LinearRing>
         </outerBoundaryIs>
