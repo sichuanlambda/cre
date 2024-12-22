@@ -220,6 +220,40 @@
                     class: "input-field" %>
                 <p class="help-text">Typical residential height limit</p>
               </div>
+
+              <div class="input-group">
+                <%= f.label :roof_style, "Roof Style", class: "input-label" %>
+                <%= f.select :roof_style,
+                    options_for_select([
+                      ['None', 'none'],
+                      ['Flat', 'flat'],
+                      ['Gabled', 'gabled'],
+                      ['Hipped', 'hipped'],
+                      ['Mansard', 'mansard']
+                    ], 'none'),
+                    {},
+                    class: "input-field" %>
+              </div>
+
+              <div class="input-group">
+                <%= f.label :roof_height, "Roof Height (feet)", class: "input-label" %>
+                <%= f.number_field :roof_height,
+                    value: 10,
+                    step: "any",
+                    required: true,
+                    class: "input-field" %>
+                <p class="help-text">Height from base of roof to peak</p>
+              </div>
+
+              <div class="input-group">
+                <%= f.label :roof_overhang, "Roof Overhang (feet)", class: "input-label" %>
+                <%= f.number_field :roof_overhang,
+                    value: 2,
+                    step: "any",
+                    required: true,
+                    class: "input-field" %>
+                <p class="help-text">Distance roof extends beyond walls</p>
+              </div>
             </div>
           </div>
 

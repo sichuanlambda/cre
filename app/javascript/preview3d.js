@@ -56,13 +56,19 @@ class BuildingPreview {
     // Remove existing building if any
     const existingBuilding = this.scene.getObjectByName('building');
     const existingLot = this.scene.getObjectByName('lot');
+    const existingRoof = this.scene.getObjectByName('roof');
     if (existingBuilding) this.scene.remove(existingBuilding);
     if (existingLot) this.scene.remove(existingLot);
+    if (existingRoof) this.scene.remove(existingRoof);
 
     // Calculate buildable area
     const buildableWidth = specs.lotWidth - (specs.sideSetback * 2);
     const buildableDepth = specs.lotDepth - specs.frontSetback - specs.rearSetback;
-    const height = specs.maxHeight;
+    
+    // Adjust building height to account for roof
+    const buildingHeight = specs.roofStyle && specs.roofStyle !== 'none' 
+      ? specs.maxHeight - specs.roofHeight 
+      : specs.maxHeight;
 
     // Create building envelope using ExtrudeGeometry
     const shape = new THREE.Shape();
@@ -78,7 +84,7 @@ class BuildingPreview {
 
     const extrudeSettings = {
       steps: 1,
-      depth: height,
+      depth: buildingHeight,
       bevelEnabled: false
     };
 
@@ -114,6 +120,16 @@ class BuildingPreview {
 
     // Add setback lines
     this.addSetbackLines(specs);
+
+    // Add roof after building
+    this.addRoof(
+      buildableWidth,
+      buildableDepth,
+      buildingHeight,
+      specs.roofHeight || 10,
+      specs.roofStyle || 'none',
+      specs.roofOverhang || 2
+    );
   }
 
   addSetbackLines(specs) {
@@ -145,6 +161,111 @@ class BuildingPreview {
     [frontLine, rearLine, leftLine, rightLine].forEach(line => {
       this.scene.add(new THREE.Line(line, material));
     });
+  }
+
+  addRoof(buildableWidth, buildableDepth, baseHeight, roofHeight, roofStyle, overhang) {
+    // Remove existing roof if any
+    const existingRoof = this.scene.getObjectByName('roof');
+    if (existingRoof) this.scene.remove(existingRoof);
+
+    if (roofStyle === 'none') return;
+
+    const roofGeometry = this.generateRoofGeometry(buildableWidth, buildableDepth, roofHeight, roofStyle, overhang);
+    const roofMaterial = new THREE.MeshPhongMaterial({
+      color: 0x8b4513,
+      side: THREE.DoubleSide
+    });
+
+    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+    roof.position.set(0, baseHeight, 0);
+    roof.name = 'roof';
+    this.scene.add(roof);
+  }
+
+  generateRoofGeometry(width, depth, height, style, overhang = 2) {
+    const totalWidth = width + (overhang * 2);
+    const totalDepth = depth + (overhang * 2);
+    const halfWidth = totalWidth / 2;
+    const halfDepth = totalDepth / 2;
+
+    switch (style) {
+      case 'gabled': {
+        const shape = new THREE.Shape();
+        // Create a triangular profile for the gabled roof
+        shape.moveTo(-halfWidth, 0);
+        shape.lineTo(0, height);
+        shape.lineTo(halfWidth, 0);
+        shape.lineTo(-halfWidth, 0);
+
+        const extrudeSettings = {
+          steps: 1,
+          depth: totalDepth,
+          bevelEnabled: false
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        // Center the geometry
+        geometry.translate(0, 0, -halfDepth);
+        return geometry;
+      }
+      
+      case 'hipped': {
+        const geometry = new THREE.BufferGeometry();
+        const vertices = new Float32Array([
+          // Front face
+          -halfWidth, 0, -halfDepth,
+          halfWidth, 0, -halfDepth,
+          0, height, 0,
+          
+          // Back face
+          -halfWidth, 0, halfDepth,
+          halfWidth, 0, halfDepth,
+          0, height, 0,
+          
+          // Left face
+          -halfWidth, 0, -halfDepth,
+          -halfWidth, 0, halfDepth,
+          0, height, 0,
+          
+          // Right face
+          halfWidth, 0, -halfDepth,
+          halfWidth, 0, halfDepth,
+          0, height, 0
+        ]);
+        
+        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        geometry.computeVertexNormals();
+        return geometry;
+      }
+
+      case 'mansard': {
+        const shape = new THREE.Shape();
+        const slopeInset = totalWidth * 0.2; // 20% inset for the slope
+        
+        // Create a mansard profile
+        shape.moveTo(-halfWidth, 0);
+        shape.lineTo(halfWidth, 0);
+        shape.lineTo(halfWidth - slopeInset, height);
+        shape.lineTo(-halfWidth + slopeInset, height);
+        shape.lineTo(-halfWidth, 0);
+
+        const extrudeSettings = {
+          steps: 1,
+          depth: totalDepth,
+          bevelEnabled: false
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        geometry.translate(0, 0, -halfDepth);
+        return geometry;
+      }
+
+      case 'flat':
+        return new THREE.BoxGeometry(totalWidth, height * 0.1, totalDepth);
+
+      default:
+        return null;
+    }
   }
 
   animate() {
@@ -245,6 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
         rearSetback: parseFloat(form.querySelector('[name="rear_setback"]').value) || 20,
         sideSetback: parseFloat(form.querySelector('[name="side_setback"]').value) || 10,
         maxHeight: parseFloat(form.querySelector('[name="max_height"]').value) || 35,
+        roofHeight: parseFloat(form.querySelector('[name="roof_height"]').value) || 10,
+        roofStyle: form.querySelector('[name="roof_style"]').value || 'none',
+        roofOverhang: parseFloat(form.querySelector('[name="roof_overhang"]').value) || 2,
       };
       
       // Update 3D preview
@@ -267,6 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
     rearSetback: 20,
     sideSetback: 10,
     maxHeight: 35,
+    roofHeight: 10,
+    roofStyle: 'none',
+    roofOverhang: 2,
   };
 
   preview.updateBuilding(initialSpecs);
