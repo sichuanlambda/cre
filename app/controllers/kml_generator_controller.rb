@@ -48,8 +48,10 @@ class KmlGeneratorController < ApplicationController
     # Calculate building footprint coordinates
     footprint = calculate_building_footprint(coordinates, specs)
 
-    # Adjust building height to account for roof
-    building_height = specs[:roof_style] && specs[:roof_style] != 'none' ? specs[:max_height] - specs[:roof_height] : specs[:max_height]
+    # Convert heights from feet to meters
+    building_height = specs[:roof_style] && specs[:roof_style] != 'none' ?
+      (specs[:max_height] - specs[:roof_height]) * 0.3048 :
+      specs[:max_height] * 0.3048
 
     # Generate base building KML
     building_kml = generate_building_kml(footprint, building_height)
@@ -106,6 +108,10 @@ class KmlGeneratorController < ApplicationController
   end
 
   def generate_roof_kml(footprint, specs)
+    # Convert heights from feet to meters
+    base_height = (specs[:max_height] - specs[:roof_height]) * 0.3048
+    ridge_height = specs[:max_height] * 0.3048
+
     # Calculate roof footprint with overhang
     roof_footprint = calculate_roof_footprint(footprint, specs[:roof_overhang])
 
