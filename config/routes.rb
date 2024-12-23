@@ -31,4 +31,10 @@ Rails.application.routes.draw do
 
   get 'kml_generator/new'
   post 'kml_generator', to: 'kml_generator#create'
+
+  resources :documents do
+    resource :chat, only: [:show] do
+      post :ask
+    end
+  end
 end
