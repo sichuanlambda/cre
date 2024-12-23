@@ -128,7 +128,8 @@ class BuildingPreview {
       buildingHeight,
       specs.roofHeight || 10,
       specs.roofStyle || 'none',
-      specs.roofOverhang || 2
+      specs.roofOverhang || 2,
+      specs
     );
   }
 
@@ -163,8 +164,7 @@ class BuildingPreview {
     });
   }
 
-  addRoof(buildableWidth, buildableDepth, baseHeight, roofHeight, roofStyle, overhang) {
-    // Remove existing roof if any
+  addRoof(buildableWidth, buildableDepth, baseHeight, roofHeight, roofStyle, overhang, specs) {
     const existingRoof = this.scene.getObjectByName('roof');
     if (existingRoof) this.scene.remove(existingRoof);
 
@@ -177,7 +177,12 @@ class BuildingPreview {
     });
 
     const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-    roof.position.set(0, baseHeight, 0);
+    roof.rotation.x = -Math.PI / 2;
+    roof.position.set(
+      0,
+      baseHeight,
+      (specs.frontSetback - specs.rearSetback) / 2
+    );
     roof.name = 'roof';
     this.scene.add(roof);
   }
@@ -192,20 +197,28 @@ class BuildingPreview {
       case 'gabled': {
         const shape = new THREE.Shape();
         // Create a triangular profile for the gabled roof
-        shape.moveTo(-halfWidth, 0);
-        shape.lineTo(0, height);
-        shape.lineTo(halfWidth, 0);
-        shape.lineTo(-halfWidth, 0);
+        shape.moveTo(-halfWidth, -halfDepth);
+        shape.lineTo(halfWidth, -halfDepth);
+        shape.lineTo(halfWidth, halfDepth);
+        shape.lineTo(-halfWidth, halfDepth);
+        shape.lineTo(-halfWidth, -halfDepth);
 
         const extrudeSettings = {
           steps: 1,
-          depth: totalDepth,
+          depth: height,
           bevelEnabled: false
         };
 
         const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        // Center the geometry
-        geometry.translate(0, 0, -halfDepth);
+        // Create the peak by scaling the top vertices
+        const positions = geometry.attributes.position.array;
+        for (let i = 0; i < positions.length; i += 3) {
+          if (positions[i + 2] === height) { // If this is a top vertex
+            positions[i] = positions[i] * (1 - positions[i + 1] / totalDepth); // Scale X based on Y position
+          }
+        }
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
         return geometry;
       }
       
@@ -213,24 +226,24 @@ class BuildingPreview {
         const geometry = new THREE.BufferGeometry();
         const vertices = new Float32Array([
           // Front face
-          -halfWidth, 0, -halfDepth,
-          halfWidth, 0, -halfDepth,
-          0, height, 0,
+          -halfWidth, -halfDepth, 0,
+          halfWidth, -halfDepth, 0,
+          0, 0, height,
           
           // Back face
-          -halfWidth, 0, halfDepth,
-          halfWidth, 0, halfDepth,
-          0, height, 0,
+          -halfWidth, halfDepth, 0,
+          halfWidth, halfDepth, 0,
+          0, 0, height,
           
           // Left face
-          -halfWidth, 0, -halfDepth,
-          -halfWidth, 0, halfDepth,
-          0, height, 0,
+          -halfWidth, -halfDepth, 0,
+          -halfWidth, halfDepth, 0,
+          0, 0, height,
           
           // Right face
-          halfWidth, 0, -halfDepth,
-          halfWidth, 0, halfDepth,
-          0, height, 0
+          halfWidth, -halfDepth, 0,
+          halfWidth, halfDepth, 0,
+          0, 0, height
         ]);
         
         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
@@ -240,28 +253,36 @@ class BuildingPreview {
 
       case 'mansard': {
         const shape = new THREE.Shape();
-        const slopeInset = totalWidth * 0.2; // 20% inset for the slope
+        const slopeInset = totalWidth * 0.2;
         
-        // Create a mansard profile
-        shape.moveTo(-halfWidth, 0);
-        shape.lineTo(halfWidth, 0);
-        shape.lineTo(halfWidth - slopeInset, height);
-        shape.lineTo(-halfWidth + slopeInset, height);
-        shape.lineTo(-halfWidth, 0);
+        shape.moveTo(-halfWidth, -halfDepth);
+        shape.lineTo(halfWidth, -halfDepth);
+        shape.lineTo(halfWidth, halfDepth);
+        shape.lineTo(-halfWidth, halfDepth);
+        shape.lineTo(-halfWidth, -halfDepth);
 
         const extrudeSettings = {
           steps: 1,
-          depth: totalDepth,
+          depth: height,
           bevelEnabled: false
         };
 
         const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        geometry.translate(0, 0, -halfDepth);
+        // Create the mansard slope by moving the top vertices inward
+        const positions = geometry.attributes.position.array;
+        for (let i = 0; i < positions.length; i += 3) {
+          if (positions[i + 2] === height) { // If this is a top vertex
+            positions[i] *= (1 - slopeInset / halfWidth);
+            positions[i + 1] *= (1 - slopeInset / halfDepth);
+          }
+        }
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
         return geometry;
       }
 
       case 'flat':
-        return new THREE.BoxGeometry(totalWidth, height * 0.1, totalDepth);
+        return new THREE.BoxGeometry(totalWidth, totalDepth, height * 0.1);
 
       default:
         return null;
@@ -294,6 +315,11 @@ function generateKMLPreview(coords, specs) {
   const buildableWidth = specs.lotWidth - (specs.sideSetback * 2);
   const buildingDepth = specs.lotDepth - specs.frontSetback - specs.rearSetback;
 
+  // Adjust building height to account for roof
+  const buildingHeight = specs.roofStyle && specs.roofStyle !== 'none' 
+    ? specs.maxHeight - specs.roofHeight 
+    : specs.maxHeight;
+
   // Calculate corners (clockwise from northwest)
   const footprint = [
     // NW corner
@@ -315,8 +341,57 @@ function generateKMLPreview(coords, specs) {
 
   // Format coordinates for KML (longitude,latitude,altitude)
   const coordinates = footprint
-    .map(point => `${point[1]},${point[0]},${specs.maxHeight}`)
+    .map(point => `${point[1]},${point[0]},${buildingHeight}`)
     .join('\n              ');
+
+  // If there's a roof, add a second polygon for it
+  let roofPolygon = '';
+  if (specs.roofStyle && specs.roofStyle !== 'none') {
+    const roofOverhang = specs.roofOverhang || 2;
+    const totalWidth = buildableWidth + (roofOverhang * 2);
+    const totalDepth = buildingDepth + (roofOverhang * 2);
+
+    const roofFootprint = [
+      // NW corner
+      [lat + (totalDepth/2 * latDegreePerFoot),
+       lng - (totalWidth/2 * lngDegreePerFoot)],
+      // NE corner
+      [lat + (totalDepth/2 * latDegreePerFoot),
+       lng + (totalWidth/2 * lngDegreePerFoot)],
+      // SE corner
+      [lat - (totalDepth/2 * latDegreePerFoot),
+       lng + (totalWidth/2 * lngDegreePerFoot)],
+      // SW corner
+      [lat - (totalDepth/2 * latDegreePerFoot),
+       lng - (totalWidth/2 * lngDegreePerFoot)],
+      // Close the polygon
+      [lat + (totalDepth/2 * latDegreePerFoot),
+       lng - (totalWidth/2 * lngDegreePerFoot)]
+    ];
+
+    const roofCoordinates = roofFootprint
+      .map(point => `${point[1]},${point[0]},${specs.maxHeight}`)
+      .join('\n              ');
+
+    roofPolygon = `
+    <Placemark>
+      <name>Roof</name>
+      <Style>
+        <PolyStyle>
+          <color>7f4b2213</color>
+        </PolyStyle>
+      </Style>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              ${roofCoordinates}
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>`;
+  }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -340,7 +415,7 @@ function generateKMLPreview(coords, specs) {
           </LinearRing>
         </outerBoundaryIs>
       </Polygon>
-    </Placemark>
+    </Placemark>${roofPolygon}
   </Document>
 </kml>`;
 }

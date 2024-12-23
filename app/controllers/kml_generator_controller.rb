@@ -17,7 +17,10 @@ class KmlGeneratorController < ApplicationController
       rear_setback: params[:rear_setback].to_f,
       side_setback: params[:side_setback].to_f,
       floor_area_ratio: params[:floor_area_ratio].to_f,
-      max_height: params[:max_height].to_f
+      max_height: params[:max_height].to_f,
+      roof_height: params[:roof_height].to_f,
+      roof_style: params[:roof_style],
+      roof_overhang: params[:roof_overhang].to_f
     }
 
     respond_to do |format|
@@ -45,7 +48,20 @@ class KmlGeneratorController < ApplicationController
     # Calculate building footprint coordinates
     footprint = calculate_building_footprint(coordinates, specs)
 
-    # Generate KML format
+    # Adjust building height to account for roof
+    building_height = specs[:roof_style] && specs[:roof_style] != 'none' ? specs[:max_height] - specs[:roof_height] : specs[:max_height]
+
+    # Generate base building KML
+    building_kml = generate_building_kml(footprint, building_height)
+
+    # Generate roof KML if needed
+    roof_kml = if specs[:roof_style] && specs[:roof_style] != 'none'
+      generate_roof_kml(footprint, specs)
+    else
+      ""
+    end
+
+    # Combine into final KMLc
     <<~KML
       <?xml version="1.0" encoding="UTF-8"?>
       <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -56,24 +72,226 @@ class KmlGeneratorController < ApplicationController
               <outline>1</outline>
             </PolyStyle>
           </Style>
-          <Placemark>
-            <name>Building Envelope</name>
-            <styleUrl>#buildingStyle</styleUrl>
-            <Polygon>
-              <extrude>1</extrude>
-              <altitudeMode>relativeToGround</altitudeMode>
-              <outerBoundaryIs>
-                <LinearRing>
-                  <coordinates>
-                    #{format_coordinates(footprint, specs[:max_height])}
-                  </coordinates>
-                </LinearRing>
-              </outerBoundaryIs>
-            </Polygon>
-          </Placemark>
+          <Style id="roofStyle">
+            <PolyStyle>
+              <color>7f4b2213</color>
+              <outline>1</outline>
+            </PolyStyle>
+          </Style>
+          #{building_kml}
+          #{roof_kml}
         </Document>
       </kml>
     KML
+  end
+
+  def generate_building_kml(footprint, height)
+    <<~KML
+      <Placemark>
+        <name>Building Envelope</name>
+        <styleUrl>#buildingStyle</styleUrl>
+        <Polygon>
+          <extrude>1</extrude>
+          <altitudeMode>relativeToGround</altitudeMode>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                #{format_coordinates(footprint, height)}
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+    KML
+  end
+
+  def generate_roof_kml(footprint, specs)
+    # Calculate roof footprint with overhang
+    roof_footprint = calculate_roof_footprint(footprint, specs[:roof_overhang])
+
+    case specs[:roof_style]
+    when 'gabled'
+      generate_gabled_roof_kml(roof_footprint, specs)
+    when 'hipped'
+      generate_hipped_roof_kml(roof_footprint, specs)
+    when 'mansard'
+      generate_mansard_roof_kml(roof_footprint, specs)
+    else # flat roof
+      generate_flat_roof_kml(roof_footprint, specs)
+    end
+  end
+
+  def generate_gabled_roof_kml(footprint, specs)
+    # Calculate ridge line (center of roof)
+    ridge_points = [
+      [(footprint[0][0] + footprint[1][0]) / 2, (footprint[0][1] + footprint[1][1]) / 2],
+      [(footprint[2][0] + footprint[3][0]) / 2, (footprint[2][1] + footprint[3][1]) / 2]
+    ]
+    base_height = specs[:max_height] - specs[:roof_height]
+    ridge_height = specs[:max_height]
+
+    <<~KML
+      <Placemark>
+        <name>Roof</name>
+        <styleUrl>#roofStyle</styleUrl>
+        <MultiGeometry>
+          <!-- Front slope -->
+          <Polygon>
+            <extrude>1</extrude>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <outerBoundaryIs>
+              <LinearRing>
+                <coordinates>
+                  #{format_coordinates([footprint[0], footprint[1]], base_height)}
+                  #{format_coordinates(ridge_points, ridge_height)}
+                  #{format_coordinates([footprint[0]], base_height)}
+                </coordinates>
+              </LinearRing>
+            </outerBoundaryIs>
+          </Polygon>
+          <!-- Back slope -->
+          <Polygon>
+            <extrude>1</extrude>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <outerBoundaryIs>
+              <LinearRing>
+                <coordinates>
+                  #{format_coordinates([footprint[2], footprint[3]], base_height)}
+                  #{format_coordinates([ridge_points[1]], ridge_height)}
+                  #{format_coordinates([footprint[2]], base_height)}
+                </coordinates>
+              </LinearRing>
+            </outerBoundaryIs>
+          </Polygon>
+        </MultiGeometry>
+      </Placemark>
+    KML
+  end
+
+  def generate_hipped_roof_kml(footprint, specs)
+    # Calculate peak point (center of roof)
+    peak_point = [
+      footprint.map { |p| p[0] }.sum / 4,
+      footprint.map { |p| p[1] }.sum / 4
+    ]
+    base_height = specs[:max_height] - specs[:roof_height]
+    ridge_height = specs[:max_height]
+
+    <<~KML
+      <Placemark>
+        <name>Roof</name>
+        <styleUrl>#roofStyle</styleUrl>
+        <MultiGeometry>
+          <!-- Four triangular faces -->
+          #{(0..3).map { |i|
+            next_i = (i + 1) % 4
+            <<~FACE
+              <Polygon>
+                <extrude>1</extrude>
+                <altitudeMode>relativeToGround</altitudeMode>
+                <outerBoundaryIs>
+                  <LinearRing>
+                    <coordinates>
+                      #{format_coordinates([footprint[i], footprint[next_i]], base_height)}
+                      #{format_coordinates([peak_point], ridge_height)}
+                      #{format_coordinates([footprint[i]], base_height)}
+                    </coordinates>
+                  </LinearRing>
+                </outerBoundaryIs>
+              </Polygon>
+            FACE
+          }.join}
+        </MultiGeometry>
+      </Placemark>
+    KML
+  end
+
+  def generate_mansard_roof_kml(footprint, specs)
+    inset = specs[:roof_overhang] * 0.8 # 80% of overhang for mansard slope
+    base_height = specs[:max_height] - specs[:roof_height]
+    top_height = specs[:max_height]
+
+    # Calculate inset points for top surface
+    inset_points = footprint.map do |point|
+      [
+        point[0] + (inset / 364000.0),
+        point[1] + (inset / (364000.0 * Math.cos(point[0] * Math::PI / 180)))
+      ]
+    end
+
+    <<~KML
+      <Placemark>
+        <name>Roof</name>
+        <styleUrl>#roofStyle</styleUrl>
+        <MultiGeometry>
+          <!-- Top surface -->
+          <Polygon>
+            <extrude>1</extrude>
+            <altitudeMode>relativeToGround</altitudeMode>
+            <outerBoundaryIs>
+              <LinearRing>
+                <coordinates>
+                  #{format_coordinates(inset_points, top_height)}
+                </coordinates>
+              </LinearRing>
+            </outerBoundaryIs>
+          </Polygon>
+          <!-- Four sloped faces -->
+          #{(0..3).map { |i|
+            next_i = (i + 1) % 4
+            <<~FACE
+              <Polygon>
+                <extrude>1</extrude>
+                <altitudeMode>relativeToGround</altitudeMode>
+                <outerBoundaryIs>
+                  <LinearRing>
+                    <coordinates>
+                      #{format_coordinates([footprint[i]], base_height)}
+                      #{format_coordinates([footprint[next_i]], base_height)}
+                      #{format_coordinates([inset_points[next_i]], top_height)}
+                      #{format_coordinates([inset_points[i]], top_height)}
+                      #{format_coordinates([footprint[i]], base_height)}
+                    </coordinates>
+                  </LinearRing>
+                </outerBoundaryIs>
+              </Polygon>
+            FACE
+          }.join}
+        </MultiGeometry>
+      </Placemark>
+    KML
+  end
+
+  def generate_flat_roof_kml(footprint, specs)
+    <<~KML
+      <Placemark>
+        <name>Roof</name>
+        <styleUrl>#roofStyle</styleUrl>
+        <Polygon>
+          <altitudeMode>relativeToGround</altitudeMode>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                #{format_coordinates(footprint, specs[:max_height])}
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+    KML
+  end
+
+  def calculate_roof_footprint(footprint, overhang)
+    # Convert overhang to degrees
+    lat_overhang = overhang / 364000.0
+    lng_overhang = overhang / (364000.0 * Math.cos(footprint[0][0] * Math::PI / 180))
+
+    footprint.map do |point|
+      [
+        point[0] + lat_overhang,
+        point[1] + lng_overhang
+      ]
+    end
   end
 
   def calculate_building_footprint(coordinates, specs)
@@ -98,11 +316,11 @@ class KmlGeneratorController < ApplicationController
     ]
   end
 
-  def format_coordinates(footprint, height)
+  def format_coordinates(points, height)
     # Format coordinates for KML (longitude,latitude,altitude)
-    footprint.map { |point|
+    points.map { |point|
       "#{point[1]},#{point[0]},#{height}"
-    }.join(" ") + " #{footprint[0][1]},#{footprint[0][0]},#{height}"
+    }.join(" ")
   end
 
   def parse_coordinates(coord_string)
