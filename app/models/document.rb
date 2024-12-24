@@ -1,5 +1,4 @@
 class Document < ApplicationRecord
-  belongs_to :user
   has_one_attached :file
   has_many :embeddings, dependent: :destroy
 

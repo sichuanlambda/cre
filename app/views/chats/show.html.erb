@@ -5,7 +5,7 @@
     <!-- Messages will be inserted here -->
   </div>
   
-  <%= form_with(url: document_chat_ask_path(@document), class: "flex space-x-2") do |f| %>
+  <%= form_with(url: ask_document_chat_path(@document), class: "flex space-x-2") do |f| %>
     <%= f.text_field :question, 
         class: "flex-1 rounded-md border-gray-300",
         placeholder: "Ask a question about this document..." %>

@@ -88,6 +88,3 @@ gem 'sidekiq'
 gem 'redis'
 
 gem 'active_storage_validations'
-
-# For Python integration
-gem 'python-bridge'
