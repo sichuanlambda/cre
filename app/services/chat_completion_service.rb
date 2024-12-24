@@ -18,7 +18,8 @@ class ChatCompletionService
     )
 
     if response.success?
-      JSON.parse(response.body)
+      response_body = JSON.parse(response.body)
+      response_body["answer"]
     else
       { error: "Failed to get response: #{response.body}" }
     end

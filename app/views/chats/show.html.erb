@@ -2,13 +2,18 @@
   <h1 class="text-2xl font-bold mb-4">Chat about <%= @document.name %></h1>
   
   <div id="chat-messages" class="space-y-4 mb-4 h-96 overflow-y-auto">
-    <!-- Messages will be inserted here -->
+    <!-- Messages will be appended here -->
   </div>
   
-  <%= form_with(url: ask_document_chat_path(@document), class: "flex space-x-2") do |f| %>
+  <%= form_with(
+        url: ask_document_chat_path(@document),
+        class: "flex space-x-2",
+        data: { controller: "chat-form" }
+      ) do |f| %>
     <%= f.text_field :question, 
         class: "flex-1 rounded-md border-gray-300",
-        placeholder: "Ask a question about this document..." %>
+        placeholder: "Ask a question about this document...",
+        data: { chat_form_target: "input" } %>
     <%= f.submit "Ask", 
         class: "px-4 py-2 bg-blue-500 text-white rounded-md",
         data: { disable_with: "Thinking..." } %>
@@ -16,23 +21,14 @@
 </div>
 
 <%= javascript_tag do %>
-  document.addEventListener('ajax:success', function(event) {
-    const [data, _status, _xhr] = event.detail;
+  document.addEventListener('turbo:submit-end', function(event) {
+    // Clear the input field after successful submission
+    const form = event.target;
+    const input = form.querySelector('input[name="question"]');
+    if (input) input.value = '';
+    
+    // Scroll to bottom
     const messagesDiv = document.getElementById('chat-messages');
-    const questionInput = document.querySelector('input[name="question"]');
-    
-    // Add question and answer to chat
-    messagesDiv.innerHTML += `
-      <div class="bg-gray-100 p-3 rounded-lg">
-        <p class="font-bold">You: ${questionInput.value}</p>
-      </div>
-      <div class="bg-blue-100 p-3 rounded-lg">
-        <p class="font-bold">Assistant:</p>
-        <p>${data.answer}</p>
-      </div>
-    `;
-    
-    questionInput.value = '';
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
 <% end %> 
