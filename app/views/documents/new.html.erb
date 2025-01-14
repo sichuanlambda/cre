@@ -1,22 +1,304 @@
-<div class="container mx-auto px-4 py-8">
-  <h1 class="text-2xl font-bold mb-4">Upload Document</h1>
-  
-  <%= form_with(model: @document, local: true, class: "space-y-4") do |f| %>
-    <div>
-      <%= f.label :name, class: "block text-sm font-medium" %>
-      <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300" %>
+<style>
+  /* Document Upload Page Styles */
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .header-section {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .header-section h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #666;
+    font-size: 1.1rem;
+  }
+
+  .upload-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .icon-container {
+    width: 48px;
+    height: 48px;
+    background: #e3f2fd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+  }
+
+  .icon-container i {
+    color: #1976d2;
+    font-size: 1.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .file-upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s;
+  }
+
+  .file-upload-area:hover {
+    border-color: #1976d2;
+  }
+
+  .file-upload-area i {
+    font-size: 2rem;
+    color: #1976d2;
+    margin-bottom: 1rem;
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .browse-button {
+    background: #1976d2;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin: 1rem 0;
+  }
+
+  .file-hint {
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .btn-primary {
+    background: #1976d2;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .btn-primary:hover {
+    background: #1565c0;
+  }
+
+  .features-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .feature-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    background: #e3f2fd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+  }
+
+  .feature-icon i {
+    color: #1976d2;
+    font-size: 1.2rem;
+  }
+
+  .feature-content h3 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+  }
+
+  .feature-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  body {
+    background: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+</style>
+
+<div class="page-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h1>Document Analysis Portal</h1>
+    <p class="subtitle">Upload your commercial real estate documents for AI-powered analysis</p>
+  </div>
+
+  <!-- Main Upload Card -->
+  <div class="upload-card">
+    <div class="card-header">
+      <div class="icon-container">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <h2>Upload Document</h2>
     </div>
-    
-    <div>
-      <%= f.label :document_type, class: "block text-sm font-medium" %>
-      <%= f.select :document_type, Document::VALID_TYPES, {}, class: "mt-1 block w-full rounded-md border-gray-300" %>
+
+    <%= form_with(model: @document, local: true, class: "upload-form") do |f| %>
+      <!-- Document Name -->
+      <div class="form-group">
+        <%= f.label :name, "Document Name" %>
+        <%= f.text_field :name, class: "form-control", placeholder: "Enter document name" %>
+      </div>
+
+      <!-- Document Type -->
+      <div class="form-group">
+        <%= f.label :document_type, "Document Type" %>
+        <%= f.select :document_type, 
+            Document::VALID_TYPES.map { |type| [type.titleize, type] },
+            {},
+            class: "form-control" %>
+      </div>
+
+      <!-- File Upload -->
+      <div class="form-group">
+        <label>Document File</label>
+        <div class="file-upload-area">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Drag and drop your file here or</p>
+          <%= f.file_field :file, class: "file-input" %>
+          <button type="button" class="browse-button">Browse Files</button>
+          <p class="file-hint">PDF, DOC, DOCX up to 10MB</p>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <%= f.submit "Analyze Document", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Features Section -->
+  <div class="features-section">
+    <div class="feature-card">
+      <div class="feature-icon">
+        <i class="fas fa-bolt"></i>
+      </div>
+      <div class="feature-content">
+        <h3>Instant Analysis</h3>
+        <p>Get AI-powered insights from your documents in seconds</p>
+      </div>
     </div>
-    
-    <div>
-      <%= f.label :file, class: "block text-sm font-medium" %>
-      <%= f.file_field :file, class: "mt-1 block w-full" %>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <div class="feature-content">
+        <h3>Secure & Private</h3>
+        <p>Enterprise-grade security for your sensitive documents</p>
+      </div>
     </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <i class="fas fa-code"></i>
+      </div>
+      <div class="feature-content">
+        <h3>Smart Extraction</h3>
+        <p>Automatically extract key terms and conditions</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get references to the elements
+    const fileInput = document.querySelector('.file-input');
+    const browseButton = document.querySelector('.browse-button');
+    const fileUploadArea = document.querySelector('.file-upload-area');
     
-    <%= f.submit "Upload", class: "mt-4 px-4 py-2 bg-blue-500 text-white rounded-md" %>
-  <% end %>
-</div> 
+    // Handle browse button click
+    browseButton.addEventListener('click', function() {
+      fileInput.click();
+    });
+
+    // Handle drag and drop
+    fileUploadArea.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      fileUploadArea.style.borderColor = '#1976d2';
+    });
+
+    fileUploadArea.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      fileUploadArea.style.borderColor = '#ddd';
+    });
+
+    fileUploadArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      fileUploadArea.style.borderColor = '#ddd';
+      fileInput.files = e.dataTransfer.files;
+      updateFileName(e.dataTransfer.files[0]);
+    });
+
+    // Handle file selection
+    fileInput.addEventListener('change', function(e) {
+      if (this.files && this.files[0]) {
+        updateFileName(this.files[0]);
+      }
+    });
+
+    // Update the UI with the selected filename
+    function updateFileName(file) {
+      const fileHint = fileUploadArea.querySelector('.file-hint');
+      fileHint.textContent = `Selected file: ${file.name}`;
+    }
+  });
+</script> 

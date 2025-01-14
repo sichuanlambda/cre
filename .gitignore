@@ -19,3 +19,6 @@ config/credentials.yml.enc
 tmp/
 log/
 .env*
+
+/app/assets/builds/*
+!/app/assets/builds/.keep
